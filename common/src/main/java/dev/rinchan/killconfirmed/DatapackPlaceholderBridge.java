@@ -13,14 +13,15 @@ import java.util.Map;
 import java.util.TreeMap;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.permissions.LevelBasedPermissionSet;
 
 final class DatapackPlaceholderBridge {
-    static final ResourceLocation CALLBACK_TAG = KillConfirmed.id("placeholder_providers");
-    static final ResourceLocation SCRATCH_STORAGE = KillConfirmed.id("scratch");
+    static final Identifier CALLBACK_TAG = KillConfirmed.id("placeholder_providers");
+    static final Identifier SCRATCH_STORAGE = KillConfirmed.id("scratch");
     private static final ReentrantFlag ACTIVE = new ReentrantFlag();
 
     private DatapackPlaceholderBridge() {}
@@ -28,11 +29,10 @@ final class DatapackPlaceholderBridge {
     static Map<PlaceholderKey, JsonElement> resolve(ServerPlayer player, DogTagSnapshot snapshot) {
         if (ACTIVE.isSet()) {
             KillConfirmed.LOGGER.error("Refused nested datapack placeholder invocation for {}",
-                    player.getGameProfile().getName());
+                    player.getGameProfile().name());
             return Map.of();
         }
-        var server = player.getServer();
-        if (server == null) throw new IllegalStateException("Cannot invoke datapack placeholders without a server");
+        var server = player.level().getServer();
         var storage = server.getCommandStorage();
         storage.set(SCRATCH_STORAGE, new CompoundTag());
         try (ReentrantFlag.Scope ignored = ACTIVE.enter()) {
@@ -41,16 +41,19 @@ final class DatapackPlaceholderBridge {
             scratch.put("output", new ListTag());
             storage.set(SCRATCH_STORAGE, scratch);
 
-            var source = player.createCommandSourceStack().withPermission(2).withSuppressedOutput();
+            var source = player.createCommandSourceStack()
+                    .withPermission(LevelBasedPermissionSet.GAMEMASTER)
+                    .withSuppressedOutput();
             for (var function : server.getFunctions().getTag(CALLBACK_TAG)) {
                 server.getFunctions().execute(function, source);
             }
 
-            ListTag raw = storage.get(SCRATCH_STORAGE).getList("output", Tag.TAG_COMPOUND);
+            ListTag raw = storage.get(SCRATCH_STORAGE).getListOrEmpty("output");
             var outputs = new ArrayList<FunctionOutput>(raw.size());
             for (int index = 0; index < raw.size(); index++) {
-                CompoundTag entry = raw.getCompound(index);
-                outputs.add(new FunctionOutput(entry.getString("id"), entry.getString("component")));
+                CompoundTag entry = raw.getCompoundOrEmpty(index);
+                outputs.add(new FunctionOutput(
+                        entry.getStringOr("id", ""), entry.getStringOr("component", "")));
             }
 
             var parsed = FunctionOutputParser.parse(outputs);
@@ -60,10 +63,9 @@ final class DatapackPlaceholderBridge {
             Map<PlaceholderKey, JsonElement> validated = new TreeMap<>();
             for (var entry : parsed.values().entrySet()) {
                 try {
-                    Component component = Component.Serializer.fromJson(entry.getValue(), player.registryAccess());
-                    if (component == null) throw new IllegalArgumentException("component decoded to null");
+                    Component component = DogTagSnapshotCodec.component(entry.getValue(), player.registryAccess());
                     validated.put(entry.getKey(), JsonParser.parseString(
-                            Component.Serializer.toJson(component, player.registryAccess())));
+                            DogTagSnapshotCodec.json(component, player.registryAccess())));
                 } catch (RuntimeException exception) {
                     KillConfirmed.LOGGER.error("All datapack placeholder output rejected because component {} is invalid: {}",
                             entry.getKey(), exception.getMessage());
@@ -84,14 +86,14 @@ final class DatapackPlaceholderBridge {
         input.putInt("schema", 1);
 
         CompoundTag owner = new CompoundTag();
-        owner.putUUID("uuid", snapshot.ownerId());
+        owner.store("uuid", UUIDUtil.CODEC, snapshot.ownerId());
         owner.putString("name", snapshot.ownerName());
         owner.putString("component", DogTagSnapshotCodec.json(snapshot.ownerDisplayName(), player.registryAccess()));
         input.put("owner", owner);
 
         snapshot.killer().ifPresent(identity -> {
             CompoundTag killer = new CompoundTag();
-            killer.putUUID("uuid", identity.id());
+            killer.store("uuid", UUIDUtil.CODEC, identity.id());
             killer.putString("type", identity.typeId().toString());
             killer.putString("component", DogTagSnapshotCodec.json(identity.displayName(), player.registryAccess()));
             input.put("killer", killer);

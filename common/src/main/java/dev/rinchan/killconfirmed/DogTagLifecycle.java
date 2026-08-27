@@ -8,8 +8,9 @@ import dev.rinchan.killconfirmed.portable.PendingState;
 import java.util.Optional;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
@@ -26,7 +27,7 @@ public final class DogTagLifecycle {
                 ? PendingState.PENDING : PendingState.EMPTY;
         var transition = DropStrategyMachine.onDeath(KillConfirmed.config().dropStrategy(), pending);
         if (transition.action() == DropAction.NOOP) {
-            KillConfirmed.LOGGER.error("Refused to create a second pending dog tag for {}", player.getGameProfile().getName());
+            KillConfirmed.LOGGER.error("Refused to create a second pending dog tag for {}", player.getGameProfile().name());
             return;
         }
 
@@ -35,8 +36,9 @@ public final class DogTagLifecycle {
         if (transition.action() == DropAction.DROP_AT_DEATH) {
             dropExactlyHere(player, stack, "death");
         } else if (transition.action() == DropAction.STORE_PENDING) {
-            TagAssertions.compound(stack.save(player.registryAccess()), serialized ->
-                    carrier.killConfirmed$setPendingDogTag(serialized));
+            TagAssertions.compound(ItemStack.CODEC.encodeStart(
+                    player.registryAccess().createSerializationContext(NbtOps.INSTANCE), stack).getOrThrow(),
+                    carrier::killConfirmed$setPendingDogTag);
         } else {
             throw new IllegalStateException("Unexpected death transition " + transition.action());
         }
@@ -51,9 +53,10 @@ public final class DogTagLifecycle {
         Optional<CompoundTag> pending = carrier(player).killConfirmed$takePendingDogTag();
         if (pending.isEmpty()) return;
 
-        Optional<ItemStack> decoded = ItemStack.parse(player.registryAccess(), pending.get());
+        Optional<ItemStack> decoded = ItemStack.CODEC.parse(
+                player.registryAccess().createSerializationContext(NbtOps.INSTANCE), pending.get()).result();
         if (decoded.isEmpty() || decoded.get().isEmpty()) {
-            KillConfirmed.LOGGER.error("Rejected malformed pending dog tag for {}", player.getGameProfile().getName());
+            KillConfirmed.LOGGER.error("Rejected malformed pending dog tag for {}", player.getGameProfile().name());
             return;
         }
 
@@ -70,13 +73,13 @@ public final class DogTagLifecycle {
                         attacker.getUUID(),
                         BuiltInRegistries.ENTITY_TYPE.getKey(attacker.getType()),
                         attacker.getDisplayName()));
-        ResourceLocation dimension = player.level().dimension().location();
+        Identifier dimension = player.level().dimension().identifier();
         String translationKey = "dimension." + dimension.getNamespace() + "."
                 + dimension.getPath().replace('/', '.');
         Component dimensionDisplay = Component.translatableWithFallback(translationKey, dimension.toString());
         return new DogTagSnapshot(
                 player.getUUID(),
-                player.getGameProfile().getName(),
+                player.getGameProfile().name(),
                 player.getDisplayName(),
                 killer,
                 source.getLocalizedDeathMessage(player),
@@ -91,12 +94,12 @@ public final class DogTagLifecycle {
     }
 
     private static void dropExactlyHere(ServerPlayer player, ItemStack stack, String phase) {
-        ServerLevel level = player.serverLevel();
+        ServerLevel level = player.level();
         ItemEntity item = new ItemEntity(level, player.getX(), player.getY(), player.getZ(), stack);
         item.setDefaultPickUpDelay();
         if (!level.addFreshEntity(item)) {
             KillConfirmed.LOGGER.error("Failed to create dog tag entity at {} position for {}",
-                    phase, player.getGameProfile().getName());
+                    phase, player.getGameProfile().name());
         }
     }
 

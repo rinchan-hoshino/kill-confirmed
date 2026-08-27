@@ -24,7 +24,7 @@ public final class KillConfirmedFabric implements ModInitializer {
         Item dogTag = Registry.register(BuiltInRegistries.ITEM, KillConfirmed.DOG_TAG_ID,
                 new Item(new Item.Properties().stacksTo(1).rarity(Rarity.RARE)));
         KillConfirmed.initialize(() -> dogTag, FabricLoader.getInstance().getConfigDir());
-        PayloadTypeRegistry.playS2C().register(PresencePayload.TYPE, PresencePayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(PresencePayload.TYPE, PresencePayload.CODEC);
 
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
             if (entity instanceof ServerPlayer player && !(player instanceof FakePlayer)) {

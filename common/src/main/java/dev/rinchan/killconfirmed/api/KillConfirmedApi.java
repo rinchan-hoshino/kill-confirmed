@@ -5,7 +5,7 @@ import dev.rinchan.killconfirmed.PlaceholderResolver;
 import java.util.Objects;
 import java.util.Optional;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 
 /** Public integration surface for Kill Confirmed. */
@@ -13,7 +13,7 @@ public final class KillConfirmedApi {
     private KillConfirmedApi() {}
 
     /** Registers one custom namespaced placeholder. Built-in and duplicate keys are rejected. */
-    public static void registerPlaceholder(ResourceLocation id, PlaceholderProvider provider) {
+    public static void registerPlaceholder(Identifier id, PlaceholderProvider provider) {
         PlaceholderResolver.register(id, Objects.requireNonNull(provider, "provider"));
     }
 

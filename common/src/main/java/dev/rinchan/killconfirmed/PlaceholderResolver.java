@@ -12,14 +12,14 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 public final class PlaceholderResolver {
     private static final PlaceholderRegistry<PlaceholderContext> JAVA_PROVIDERS = new PlaceholderRegistry<>();
 
     private PlaceholderResolver() {}
 
-    public static void register(ResourceLocation id, PlaceholderProvider provider) {
+    public static void register(Identifier id, PlaceholderProvider provider) {
         Objects.requireNonNull(id, "id");
         Objects.requireNonNull(provider, "provider");
         PlaceholderKey key = new PlaceholderKey(id.getNamespace(), id.getPath());
