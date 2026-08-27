@@ -1,15 +1,20 @@
 package dev.rinchan.killconfirmed;
 
+import com.google.gson.JsonElement;
+import com.mojang.serialization.JsonOps;
+import com.google.gson.JsonParser;
 import dev.rinchan.killconfirmed.api.DogTagSnapshot;
 import dev.rinchan.killconfirmed.api.EntityIdentity;
 import java.util.Optional;
+import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.chat.ComponentSerialization;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 
@@ -22,12 +27,12 @@ public final class DogTagSnapshotCodec {
     public static CompoundTag encode(DogTagSnapshot snapshot, HolderLookup.Provider registries) {
         CompoundTag tag = new CompoundTag();
         tag.putInt("schema", SNAPSHOT_SCHEMA);
-        tag.putUUID("owner_id", snapshot.ownerId());
+        tag.store("owner_id", UUIDUtil.CODEC, snapshot.ownerId());
         tag.putString("owner_name", snapshot.ownerName());
         tag.putString("owner_display", json(snapshot.ownerDisplayName(), registries));
         snapshot.killer().ifPresent(killer -> {
             CompoundTag killerTag = new CompoundTag();
-            killerTag.putUUID("id", killer.id());
+            killerTag.store("id", UUIDUtil.CODEC, killer.id());
             killerTag.putString("type", killer.typeId().toString());
             killerTag.putString("display", json(killer.displayName(), registries));
             tag.put("killer", killerTag);
@@ -44,32 +49,40 @@ public final class DogTagSnapshotCodec {
 
     public static Optional<DogTagSnapshot> decode(CompoundTag tag, HolderLookup.Provider registries) {
         try {
-            if (!tag.contains("schema", Tag.TAG_INT) || tag.getInt("schema") != SNAPSHOT_SCHEMA
-                    || !tag.hasUUID("owner_id") || !tag.contains("owner_name", Tag.TAG_STRING)
-                    || !tag.contains("owner_display", Tag.TAG_STRING)
-                    || !tag.contains("death_message", Tag.TAG_STRING)
-                    || !tag.contains("dimension_id", Tag.TAG_STRING)
-                    || !tag.contains("dimension_display", Tag.TAG_STRING)) {
+            Optional<Integer> schema = tag.getInt("schema");
+            Optional<UUID> ownerId = tag.read("owner_id", UUIDUtil.CODEC);
+            Optional<String> ownerName = tag.getString("owner_name");
+            Optional<String> ownerDisplay = tag.getString("owner_display");
+            Optional<String> deathMessage = tag.getString("death_message");
+            Optional<String> dimensionId = tag.getString("dimension_id");
+            Optional<String> dimensionDisplay = tag.getString("dimension_display");
+            if (schema.isEmpty() || schema.get() != SNAPSHOT_SCHEMA || ownerId.isEmpty()
+                    || ownerName.isEmpty() || ownerDisplay.isEmpty() || deathMessage.isEmpty()
+                    || dimensionId.isEmpty() || dimensionDisplay.isEmpty()) {
                 return Optional.empty();
             }
+
             Optional<EntityIdentity> killer = Optional.empty();
-            if (tag.contains("killer", Tag.TAG_COMPOUND)) {
-                CompoundTag value = tag.getCompound("killer");
-                if (!value.hasUUID("id") || !value.contains("type", Tag.TAG_STRING)
-                        || !value.contains("display", Tag.TAG_STRING)) return Optional.empty();
-                killer = Optional.of(new EntityIdentity(value.getUUID("id"), ResourceLocation.parse(value.getString("type")),
-                        component(value.getString("display"), registries)));
+            Optional<CompoundTag> killerTag = tag.getCompound("killer");
+            if (killerTag.isPresent()) {
+                CompoundTag value = killerTag.get();
+                Optional<UUID> id = value.read("id", UUIDUtil.CODEC);
+                Optional<String> type = value.getString("type");
+                Optional<String> display = value.getString("display");
+                if (id.isEmpty() || type.isEmpty() || display.isEmpty()) return Optional.empty();
+                killer = Optional.of(new EntityIdentity(id.get(), Identifier.parse(type.get()),
+                        component(display.get(), registries)));
             }
             return Optional.of(new DogTagSnapshot(
-                    tag.getUUID("owner_id"),
-                    tag.getString("owner_name"),
-                    component(tag.getString("owner_display"), registries),
+                    ownerId.get(),
+                    ownerName.get(),
+                    component(ownerDisplay.get(), registries),
                     killer,
-                    component(tag.getString("death_message"), registries),
-                    new BlockPos(tag.getInt("x"), tag.getInt("y"), tag.getInt("z")),
-                    ResourceLocation.parse(tag.getString("dimension_id")),
-                    component(tag.getString("dimension_display"), registries),
-                    tag.getInt("experience_level")));
+                    component(deathMessage.get(), registries),
+                    new BlockPos(tag.getIntOr("x", 0), tag.getIntOr("y", 0), tag.getIntOr("z", 0)),
+                    Identifier.parse(dimensionId.get()),
+                    component(dimensionDisplay.get(), registries),
+                    tag.getIntOr("experience_level", 0)));
         } catch (RuntimeException exception) {
             KillConfirmed.LOGGER.error("Rejected malformed dog tag snapshot", exception);
             return Optional.empty();
@@ -81,18 +94,23 @@ public final class DogTagSnapshotCodec {
         CustomData data = stack.get(DataComponents.CUSTOM_DATA);
         if (data == null) return Optional.empty();
         CompoundTag root = data.copyTag();
-        return root.contains(ROOT_KEY, Tag.TAG_COMPOUND)
-                ? decode(root.getCompound(ROOT_KEY), registries)
-                : Optional.empty();
+        return root.getCompound(ROOT_KEY).flatMap(tag -> decode(tag, registries));
     }
 
     static String json(Component component, HolderLookup.Provider registries) {
-        return Component.Serializer.toJson(component, registries);
+        JsonElement encoded = ComponentSerialization.CODEC
+                .encodeStart(registries.createSerializationContext(JsonOps.INSTANCE), component)
+                .getOrThrow();
+        return encoded.toString();
     }
 
     static Component component(String json, HolderLookup.Provider registries) {
-        Component component = Component.Serializer.fromJson(json, registries);
-        if (component == null) throw new IllegalArgumentException("Component JSON decoded to null");
-        return component;
+        return component(JsonParser.parseString(json), registries);
+    }
+
+    static Component component(JsonElement json, HolderLookup.Provider registries) {
+        return ComponentSerialization.CODEC
+                .parse(registries.createSerializationContext(JsonOps.INSTANCE), json)
+                .getOrThrow();
     }
 }

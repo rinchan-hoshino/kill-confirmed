@@ -3,7 +3,7 @@ package dev.rinchan.killconfirmed;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.function.Supplier;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,7 +12,7 @@ public final class KillConfirmed {
     public static final String MOD_ID = "kill_confirmed";
     public static final String NETWORK_VERSION = "1";
     public static final Logger LOGGER = LoggerFactory.getLogger("Kill Confirmed");
-    public static final ResourceLocation DOG_TAG_ID = id("dog_tag");
+    public static final Identifier DOG_TAG_ID = id("dog_tag");
 
     private static Supplier<Item> dogTag;
     private static KillConfirmedConfig config;
@@ -36,7 +36,7 @@ public final class KillConfirmed {
         return config;
     }
 
-    public static ResourceLocation id(String path) {
-        return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
+    public static Identifier id(String path) {
+        return Identifier.fromNamespaceAndPath(MOD_ID, path);
     }
 }

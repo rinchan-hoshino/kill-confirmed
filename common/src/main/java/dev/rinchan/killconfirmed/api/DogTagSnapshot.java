@@ -5,7 +5,7 @@ import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 /** Immutable public death data stored on every dog tag. */
 public record DogTagSnapshot(
@@ -15,7 +15,7 @@ public record DogTagSnapshot(
         Optional<EntityIdentity> killer,
         Component deathMessage,
         BlockPos deathPosition,
-        ResourceLocation dimensionId,
+        Identifier dimensionId,
         Component dimensionDisplayName,
         int experienceLevel) {
     public DogTagSnapshot {

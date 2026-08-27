@@ -2,6 +2,7 @@ package dev.rinchan.killconfirmed.portable;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.google.gson.JsonParser;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -44,6 +45,53 @@ class SourceContractTest {
         assertTrue(neoForgeMain.contains("RegisterPayloadHandlersEvent"));
         assertTrue(neoForgeMain.contains("playToClient"));
         assertFalse(neoForgeMain.contains(".optional()"));
+    }
+
+    @Test
+    void port_pins_26_2_and_exact_modrinth_rinlib_artifacts() throws IOException {
+        String properties = read("gradle.properties");
+        String rootBuild = read("build.gradle");
+        String settings = read("settings.gradle");
+        String fabric = read("fabric/build.gradle");
+        String neoForge = read("neoforge/build.gradle");
+        String readme = read("README.md");
+
+        assertTrue(properties.contains("minecraft_version=26.2"));
+        assertTrue(properties.contains("java_version=25"));
+        assertTrue(properties.contains("rinlib_version=1.0.0"));
+        assertTrue(rootBuild.contains("maven { url = 'https://api.modrinth.com/maven' }"));
+        assertFalse(rootBuild.contains("mavenLocal()"));
+        assertFalse(settings.contains("mavenLocal()"));
+        assertTrue(fabric.contains(
+                "maven.modrinth:rinlib:${root.property('rinlib_version')}+${root.property('minecraft_version')}-fabric"));
+        assertTrue(neoForge.contains(
+                "maven.modrinth:rinlib:${rootProject.rinlib_version}+${rootProject.minecraft_version}-neoforge"));
+        assertTrue(readme.contains("Identifier.fromNamespaceAndPath"));
+        assertFalse(readme.contains("ResourceLocation"));
+    }
+
+    @Test
+    void combined_resources_cover_exact_client_and_server_pack_formats() throws IOException {
+        var pack = JsonParser.parseString(read("common/src/main/resources/pack.mcmeta"))
+                .getAsJsonObject().getAsJsonObject("pack");
+        assertFalse(pack.has("pack_format"));
+        assertEquals(88, pack.getAsJsonArray("min_format").get(0).getAsInt());
+        assertEquals(0, pack.getAsJsonArray("min_format").get(1).getAsInt());
+        assertEquals(107, pack.getAsJsonArray("max_format").get(0).getAsInt());
+        assertEquals(1, pack.getAsJsonArray("max_format").get(1).getAsInt());
+    }
+
+    @Test
+    void modern_item_definition_selects_the_existing_dog_tag_model() throws IOException {
+        var item = JsonParser.parseString(read(
+                "common/src/main/resources/assets/kill_confirmed/items/dog_tag.json"))
+                .getAsJsonObject().getAsJsonObject("model");
+        assertEquals("minecraft:model", item.get("type").getAsString());
+        assertEquals("kill_confirmed:item/dog_tag", item.get("model").getAsString());
+        assertTrue(Files.isRegularFile(ROOT.resolve(
+                "common/src/main/resources/assets/kill_confirmed/models/item/dog_tag.json")));
+        assertTrue(Files.isRegularFile(ROOT.resolve(
+                "common/src/main/resources/assets/kill_confirmed/textures/item/dog_tag.png")));
     }
 
     @Test

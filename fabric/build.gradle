@@ -1,7 +1,7 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
-    id 'fabric-loom'
+    id 'net.fabricmc.fabric-loom'
 }
 
 def root = rootProject
@@ -18,10 +18,9 @@ sourceSets.main.resources.srcDir root.file('common/src/main/resources')
 
 dependencies {
     minecraft "com.mojang:minecraft:${root.property('minecraft_version')}"
-    mappings loom.officialMojangMappings()
-    modImplementation "net.fabricmc:fabric-loader:${root.property('fabric_loader_version')}"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${root.property('fabric_api_version')}"
-    modImplementation "maven.modrinth:rinlib:${root.property('rinlib_version')}+${root.property('minecraft_version')}-fabric"
+    implementation "net.fabricmc:fabric-loader:${root.property('fabric_loader_version')}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${root.property('fabric_api_version')}"
+    implementation "maven.modrinth:rinlib:${root.property('rinlib_version')}+${root.property('minecraft_version')}-fabric"
 }
 
 def resourceProperties = [
@@ -53,7 +52,7 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             artifactId = "${modId}-fabric"
-            artifact(tasks.named('remapJar'))
+            artifact(tasks.named('jar'))
         }
     }
 }

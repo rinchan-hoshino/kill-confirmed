@@ -1,6 +1,7 @@
 {
   "pack": {
-    "pack_format": 34,
-    "description": "Kill Confirmed resources"
+    "description": "Kill Confirmed resources",
+    "min_format": [88, 0],
+    "max_format": [107, 1]
   }
 }

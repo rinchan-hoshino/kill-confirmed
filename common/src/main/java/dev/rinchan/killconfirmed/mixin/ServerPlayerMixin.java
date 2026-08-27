@@ -3,8 +3,9 @@ package dev.rinchan.killconfirmed.mixin;
 import dev.rinchan.killconfirmed.PendingDogTagCarrier;
 import java.util.Optional;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -17,15 +18,17 @@ public abstract class ServerPlayerMixin implements PendingDogTagCarrier {
     @Unique private CompoundTag killConfirmed$pending;
 
     @Inject(method = "addAdditionalSaveData", at = @At("TAIL"))
-    private void killConfirmed$savePending(CompoundTag root, CallbackInfo callback) {
-        if (killConfirmed$pending != null) root.put(KILL_CONFIRMED_PENDING, killConfirmed$pending.copy());
+    private void killConfirmed$savePending(ValueOutput output, CallbackInfo callback) {
+        if (killConfirmed$pending != null) {
+            output.store(KILL_CONFIRMED_PENDING, CompoundTag.CODEC, killConfirmed$pending.copy());
+        }
     }
 
     @Inject(method = "readAdditionalSaveData", at = @At("TAIL"))
-    private void killConfirmed$loadPending(CompoundTag root, CallbackInfo callback) {
-        killConfirmed$pending = root.contains(KILL_CONFIRMED_PENDING, Tag.TAG_COMPOUND)
-                ? root.getCompound(KILL_CONFIRMED_PENDING).copy()
-                : null;
+    private void killConfirmed$loadPending(ValueInput input, CallbackInfo callback) {
+        killConfirmed$pending = input.read(KILL_CONFIRMED_PENDING, CompoundTag.CODEC)
+                .map(CompoundTag::copy)
+                .orElse(null);
     }
 
     @Override

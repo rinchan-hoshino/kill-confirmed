@@ -25,9 +25,7 @@ final class DogTagItemFactory {
 
         var lore = new ArrayList<Component>(rendered.size());
         for (var json : rendered) {
-            Component component = Component.Serializer.fromJson(json, registries);
-            if (component == null) throw new IllegalArgumentException("Lore component decoded to null");
-            lore.add(component);
+            lore.add(DogTagSnapshotCodec.component(json, registries));
         }
 
         ItemStack stack = new ItemStack(KillConfirmed.dogTag());
