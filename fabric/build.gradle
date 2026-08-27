@@ -1,5 +1,6 @@
 plugins {
     id 'java-library'
+    id 'maven-publish'
     id 'fabric-loom'
 }
 
@@ -45,5 +46,14 @@ tasks.withType(Jar).configureEach {
     from(rootProject.file('LICENSE')) {
         into 'META-INF'
         rename { 'LICENSE_kill_confirmed' }
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = "${modId}-fabric"
+            artifact(tasks.named('remapJar'))
+        }
     }
 }
