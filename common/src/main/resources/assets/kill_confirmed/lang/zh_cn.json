@@ -1,0 +1,12 @@
+{
+  "item.kill_confirmed.dog_tag": "狗牌",
+  "item.kill_confirmed.dog_tag.named": "%s的狗牌",
+  "tooltip.kill_confirmed.killer": "击杀者：%s",
+  "tooltip.kill_confirmed.death_message": "死亡信息：%s",
+  "tooltip.kill_confirmed.coordinates": "坐标：%s",
+  "tooltip.kill_confirmed.coordinates.value": "%s, %s, %s",
+  "tooltip.kill_confirmed.dimension": "维度：%s",
+  "tooltip.kill_confirmed.level": "经验等级：%s",
+  "tooltip.kill_confirmed.level.value": "%s",
+  "disconnect.kill_confirmed.required_client": "客户端与服务端都必须安装 Kill Confirmed。"
+}

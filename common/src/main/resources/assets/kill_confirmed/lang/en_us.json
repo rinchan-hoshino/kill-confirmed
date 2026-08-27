@@ -1,0 +1,12 @@
+{
+  "item.kill_confirmed.dog_tag": "Dog Tag",
+  "item.kill_confirmed.dog_tag.named": "%s's Dog Tag",
+  "tooltip.kill_confirmed.killer": "Killer: %s",
+  "tooltip.kill_confirmed.death_message": "Death: %s",
+  "tooltip.kill_confirmed.coordinates": "Coordinates: %s",
+  "tooltip.kill_confirmed.coordinates.value": "%s, %s, %s",
+  "tooltip.kill_confirmed.dimension": "Dimension: %s",
+  "tooltip.kill_confirmed.level": "Experience Level: %s",
+  "tooltip.kill_confirmed.level.value": "%s",
+  "disconnect.kill_confirmed.required_client": "Kill Confirmed is required on both the client and server."
+}

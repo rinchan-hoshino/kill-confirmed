@@ -1,0 +1,8 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "dev.rinchan.killconfirmed.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": ["ServerPlayerMixin"],
+  "injectors": {"defaultRequire": 1}
+}

@@ -1,0 +1,38 @@
+[
+  {
+    "when": "kill_confirmed:killer",
+    "component": {
+      "translate": "tooltip.kill_confirmed.killer",
+      "color": "red",
+      "with": [{"placeholder": "kill_confirmed:killer"}]
+    }
+  },
+  {
+    "component": {
+      "translate": "tooltip.kill_confirmed.death_message",
+      "color": "gray",
+      "with": [{"placeholder": "kill_confirmed:death_message"}]
+    }
+  },
+  {
+    "component": {
+      "translate": "tooltip.kill_confirmed.coordinates",
+      "color": "aqua",
+      "with": [{"placeholder": "kill_confirmed:coordinates"}]
+    }
+  },
+  {
+    "component": {
+      "translate": "tooltip.kill_confirmed.dimension",
+      "color": "light_purple",
+      "with": [{"placeholder": "kill_confirmed:dimension"}]
+    }
+  },
+  {
+    "component": {
+      "translate": "tooltip.kill_confirmed.level",
+      "color": "yellow",
+      "with": [{"placeholder": "kill_confirmed:level"}]
+    }
+  }
+]

@@ -1,0 +1,22 @@
+plugins {
+    id 'fabric-loom' version '1.14.7' apply false
+    id 'net.neoforged.moddev' version '2.0.137' apply false
+}
+
+subprojects {
+    group = rootProject.mod_group_id
+    version = rootProject.mod_version
+
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven { url = 'https://maven.fabricmc.net/' }
+        maven { url = 'https://maven.neoforged.net/releases' }
+        maven { url = 'https://api.modrinth.com/maven' }
+    }
+
+    plugins.withType(JavaPlugin).configureEach {
+        java.toolchain.languageVersion = JavaLanguageVersion.of(rootProject.java_version as int)
+        tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+    }
+}
