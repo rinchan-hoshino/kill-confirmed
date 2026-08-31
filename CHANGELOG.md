@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.1
+
+- Publish the corrected mod icon with the existing dog-tag behavior unchanged.
+- Include the proof-gated drop-strategy and provider contract tests in source.
+
 ## 1.0.0
 
 - Create one structured dog tag for every real server-player death.
