@@ -1,10 +1,32 @@
-# Kill Confirmed / 击杀确认
+# Kill Confirmed
 
-![Kill Confirmed dog tag](docs/icon.png)
+<!-- PROJECT_PAGE_START -->
+Turn every real player death into a structured dog tag that records what happened and can follow your server's drop or respawn rules.
 
-Kill Confirmed is a Minecraft server-authoritative mod for Fabric and NeoForge. Every real server-player death creates one structured dog tag snapshot. The default strategy drops it at the death position; `config/kill_confirmed.json` can instead retain one pending tag and deliver it to the respawn inventory, dropping only an uninserted remainder at the respawn position.
+![Kill Confirmed workflow](docs/overview.png)
 
-RinLib 1.0.0 or newer is a required dependency on both physical sides. A versioned, non-optional presence payload also rejects client/server installations that cannot speak the mod channel. The same common source is compiled into both loader artifacts.
+## What a tag records
+
+- Owner, killer, death message and game time.
+- Dimension, coordinates and experience level.
+- A server-created signature and death identifier for reliable tracking.
+
+## Delivery policy
+
+Server configuration chooses whether tags drop, return on respawn, or do both. Duplicate callbacks for the same death are ignored.
+
+## Compatibility
+
+Available for the supported Fabric and NeoForge versions listed on the platform Versions page. RinLib is required.
+
+## Download and support
+
+Use the platform Versions page for exact game-version and loader files. Report reproducible problems through the project GitHub Issues page.
+<!-- PROJECT_PAGE_END -->
+
+---
+
+## Additional technical details
 
 ## Snapshot and Java API
 
