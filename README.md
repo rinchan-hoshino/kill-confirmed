@@ -3,7 +3,6 @@
 <!-- PROJECT_PAGE_START -->
 Turn every real player death into a structured dog tag that records what happened and can follow your server's drop or respawn rules.
 
-![Kill Confirmed workflow](docs/overview.png)
 
 ## What a tag records
 
