@@ -1,0 +1,10 @@
+plugins { id 'fabric-loom' version '1.14.7' }
+apply from: 'common.gradle'
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraft}"
+    mappings loom.officialMojangMappings()
+    modImplementation "net.fabricmc:fabric-loader:${target.fabric_loader}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${target.fabric_api}"
+    if (project.hasProperty('rinlibJar')) modImplementation files(project.property('rinlibJar'))
+    else modImplementation "maven.modrinth:rinlib:${releaseProperties.rinlib_version}+${minecraft}-fabric"
+}

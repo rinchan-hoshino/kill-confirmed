@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "kill_confirmed_probe",
+  "version": "1.0.0",
+  "name": "Kill Confirmed Runtime Probe",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "dev.rinchan.killconfirmedprobe.ProbeEntrypoint"
+    ],
+    "client": [
+      "dev.rinchan.killconfirmedprobe.FabricClientProbe"
+    ]
+  }
+}

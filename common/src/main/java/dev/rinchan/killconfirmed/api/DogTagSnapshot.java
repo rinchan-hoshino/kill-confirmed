@@ -7,7 +7,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
-/** Immutable public death data stored on every dog tag. */
+/** Captured death data stored on every dog tag. */
 public record DogTagSnapshot(
         UUID ownerId,
         String ownerName,
@@ -31,4 +31,13 @@ public record DogTagSnapshot(
         dimensionDisplayName = Objects.requireNonNull(dimensionDisplayName, "dimensionDisplayName").copy();
         if (experienceLevel < 0) throw new IllegalArgumentException("experienceLevel must not be negative");
     }
+
+    @Override
+    public Component ownerDisplayName() { return ownerDisplayName.copy(); }
+
+    @Override
+    public Component deathMessage() { return deathMessage.copy(); }
+
+    @Override
+    public Component dimensionDisplayName() { return dimensionDisplayName.copy(); }
 }

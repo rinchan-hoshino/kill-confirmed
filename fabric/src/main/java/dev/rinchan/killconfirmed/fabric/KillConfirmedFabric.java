@@ -16,13 +16,12 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.Rarity;
 
 public final class KillConfirmedFabric implements ModInitializer {
     @Override
     public void onInitialize() {
         Item dogTag = Registry.register(BuiltInRegistries.ITEM, KillConfirmed.DOG_TAG_ID,
-                new Item(new Item.Properties().stacksTo(1).rarity(Rarity.RARE)));
+                KillConfirmed.createDogTag());
         KillConfirmed.initialize(() -> dogTag, FabricLoader.getInstance().getConfigDir());
         PayloadTypeRegistry.playS2C().register(PresencePayload.TYPE, PresencePayload.CODEC);
 

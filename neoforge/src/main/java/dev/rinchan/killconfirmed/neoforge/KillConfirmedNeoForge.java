@@ -5,7 +5,6 @@ import dev.rinchan.killconfirmed.KillConfirmed;
 import dev.rinchan.killconfirmed.PresencePayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.Rarity;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
@@ -22,7 +21,7 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 public final class KillConfirmedNeoForge {
     private static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(KillConfirmed.MOD_ID);
     private static final DeferredItem<Item> DOG_TAG = ITEMS.register("dog_tag",
-            () -> new Item(new Item.Properties().stacksTo(1).rarity(Rarity.RARE)));
+            KillConfirmed::createDogTag);
 
     public KillConfirmedNeoForge(IEventBus modBus) {
         ITEMS.register(modBus);

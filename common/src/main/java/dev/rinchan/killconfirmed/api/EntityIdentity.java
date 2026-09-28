@@ -12,4 +12,7 @@ public record EntityIdentity(UUID id, ResourceLocation typeId, Component display
         Objects.requireNonNull(typeId, "typeId");
         displayName = Objects.requireNonNull(displayName, "displayName").copy();
     }
+
+    @Override
+    public Component displayName() { return displayName.copy(); }
 }

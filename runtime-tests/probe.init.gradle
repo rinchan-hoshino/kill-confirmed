@@ -1,0 +1,59 @@
+allprojects {
+    afterEvaluate { p ->
+        def packaged = System.getProperty('probe.jar') != null
+        if (packaged) p.dependencies.add(p.modLoader == 'fabric' && !p.minecraft.startsWith('26.') ? 'modRuntimeOnly' : 'runtimeOnly', p.files(System.getProperty('probe.jar')))
+        def base = new File(p.sourceRoot, 'runtime-tests')
+        def prepareProbe = p.tasks.register('prepareProbe', Sync) {
+            inputs.file new File(base, 'probe.init.gradle')
+            from new File(base, 'common/java')
+            from new File(base, 'client/java')
+            from new File(base, "${p.modLoader}/java")
+            from new File(base, "players-${p.target.adapter}")
+            into p.layout.buildDirectory.dir('generated/probe')
+            if (p.target.adapter == '26') {
+                filter { String line -> line.replaceAll('\\bResourceLocation\\b', 'Identifier').replace('.dimension().location()', '.dimension().identifier()').replace('net.minecraft.world.entity.monster.Zombie', 'net.minecraft.world.entity.monster.zombie.Zombie').replace('TagParser.parseTag(', 'TagParser.parseCompoundFully(') }
+            }
+        }
+        def probe = p.sourceSets.create('runtimeProbe') {
+            java.setSrcDirs([prepareProbe])
+            resources.srcDir new File(base, "${p.modLoader}/resources")
+            resources.srcDir new File(base, "common/resources")
+            compileClasspath += p.sourceSets.main.output + p.sourceSets.main.compileClasspath
+            runtimeClasspath += p.sourceSets.main.runtimeClasspath - p.sourceSets.main.output
+            if (!packaged) runtimeClasspath += p.sourceSets.main.output
+        }
+        if (p.modLoader == 'fabric') {
+            p.loom.mods {
+                if (!packaged) kill_confirmed { sourceSet(p.sourceSets.main) }
+                kill_confirmed_probe { sourceSet(probe) }
+            }
+            ['server','client'].each { side ->
+                p.loom.runs.getByName(side) {
+                    source(probe)
+                    runDir(p.projectDir.toPath().relativize(p.file(System.getProperty('probe.instance')).toPath()).toString())
+                }
+                p.tasks.named(side == 'server' ? 'runServer' : 'runClient').configure {
+                    doFirst { workingDir = p.file(System.getProperty('probe.instance')) }
+                }
+            }
+        } else {
+            if (packaged) p.neoForge.mods.remove(p.neoForge.mods.getByName('kill_confirmed'))
+            p.neoForge.mods.create('kill_confirmed_probe') { sourceSet(probe) }
+            p.neoForge.runs.create('probeClient') {
+                sourceSet = probe
+                client()
+                gameDirectory = p.file(System.getProperty('probe.instance'))
+            }
+            p.neoForge.runs.create('probeServer') {
+                sourceSet = probe
+                server()
+                gameDirectory = p.file(System.getProperty('probe.instance'))
+                programArgument '--nogui'
+            }
+        }
+        p.tasks.register('runtimeProbeJar', Jar) {
+            archiveBaseName = 'kill_confirmed-runtime-probe'
+            from probe.output
+        }
+    }
+}

@@ -8,7 +8,8 @@ base { archivesName = "${rootProject.mod_id}-neoforge" }
 
 sourceSets.main.java.srcDirs += [
         rootProject.file('common/src/main/java'),
-        rootProject.file('portable/src/main/java')
+        rootProject.file('portable/src/main/java'),
+        rootProject.file('adapters/1.21')
 ]
 sourceSets.main.resources.srcDir rootProject.file('common/src/main/resources')
 sourceSets.main.resources.srcDir tasks.register('generateModMetadata', ProcessResources) {
@@ -32,7 +33,8 @@ sourceSets.main.resources.srcDir tasks.register('generateModMetadata', ProcessRe
 }
 
 dependencies {
-    implementation "maven.modrinth:rinlib:${rootProject.rinlib_version}+${rootProject.minecraft_version}-neoforge"
+    if (rootProject.hasProperty('rinlibNeoJar')) implementation files(rootProject.property('rinlibNeoJar'))
+    else implementation "maven.modrinth:rinlib:${rootProject.rinlib_version}+${rootProject.minecraft_version}-neoforge"
 }
 
 neoForge {

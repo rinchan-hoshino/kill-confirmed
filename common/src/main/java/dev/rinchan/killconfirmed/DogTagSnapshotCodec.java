@@ -1,75 +1,60 @@
 package dev.rinchan.killconfirmed;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.rinchan.killconfirmed.api.DogTagSnapshot;
 import dev.rinchan.killconfirmed.api.EntityIdentity;
+import dev.rinchan.rinlib.minecraft.MinecraftData;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.CustomData;
 
+/** The schema-one NBT layout is shared by every supported Minecraft version. */
 public final class DogTagSnapshotCodec {
     static final String ROOT_KEY = "kill_confirmed:snapshot";
-    private static final int SNAPSHOT_SCHEMA = 1;
 
     private DogTagSnapshotCodec() {}
 
+    private static Codec<DogTagSnapshot> codec(HolderLookup.Provider registries) {
+        var data = MinecraftData.of(registries);
+        Codec<Component> text = Codec.STRING.xmap(data::component, data::json);
+        Codec<EntityIdentity> identity = RecordCodecBuilder.create(instance -> instance.group(
+                UUIDUtil.CODEC.fieldOf("id").forGetter(EntityIdentity::id),
+                ResourceLocation.CODEC.fieldOf("type").forGetter(EntityIdentity::typeId),
+                text.fieldOf("display").forGetter(EntityIdentity::displayName)
+        ).apply(instance, EntityIdentity::new));
+        return RecordCodecBuilder.create(instance -> instance.group(
+                Codec.intRange(1, 1).fieldOf("schema").forGetter(snapshot -> 1),
+                UUIDUtil.CODEC.fieldOf("owner_id").forGetter(DogTagSnapshot::ownerId),
+                Codec.STRING.fieldOf("owner_name").forGetter(DogTagSnapshot::ownerName),
+                text.fieldOf("owner_display").forGetter(DogTagSnapshot::ownerDisplayName),
+                identity.optionalFieldOf("killer").forGetter(DogTagSnapshot::killer),
+                text.fieldOf("death_message").forGetter(DogTagSnapshot::deathMessage),
+                Codec.INT.optionalFieldOf("x", 0).forGetter(snapshot -> snapshot.deathPosition().getX()),
+                Codec.INT.optionalFieldOf("y", 0).forGetter(snapshot -> snapshot.deathPosition().getY()),
+                Codec.INT.optionalFieldOf("z", 0).forGetter(snapshot -> snapshot.deathPosition().getZ()),
+                ResourceLocation.CODEC.fieldOf("dimension_id").forGetter(DogTagSnapshot::dimensionId),
+                text.fieldOf("dimension_display").forGetter(DogTagSnapshot::dimensionDisplayName),
+                Codec.intRange(0, Integer.MAX_VALUE).optionalFieldOf("experience_level", 0)
+                        .forGetter(DogTagSnapshot::experienceLevel)
+        ).apply(instance, (schema, id, name, display, killer, message, x, y, z, dimension, dimensionDisplay, level) ->
+                new DogTagSnapshot(id, name, display, killer, message, new BlockPos(x, y, z),
+                        dimension, dimensionDisplay, level)));
+    }
+
     public static CompoundTag encode(DogTagSnapshot snapshot, HolderLookup.Provider registries) {
-        CompoundTag tag = new CompoundTag();
-        tag.putInt("schema", SNAPSHOT_SCHEMA);
-        tag.putUUID("owner_id", snapshot.ownerId());
-        tag.putString("owner_name", snapshot.ownerName());
-        tag.putString("owner_display", json(snapshot.ownerDisplayName(), registries));
-        snapshot.killer().ifPresent(killer -> {
-            CompoundTag killerTag = new CompoundTag();
-            killerTag.putUUID("id", killer.id());
-            killerTag.putString("type", killer.typeId().toString());
-            killerTag.putString("display", json(killer.displayName(), registries));
-            tag.put("killer", killerTag);
-        });
-        tag.putString("death_message", json(snapshot.deathMessage(), registries));
-        tag.putInt("x", snapshot.deathPosition().getX());
-        tag.putInt("y", snapshot.deathPosition().getY());
-        tag.putInt("z", snapshot.deathPosition().getZ());
-        tag.putString("dimension_id", snapshot.dimensionId().toString());
-        tag.putString("dimension_display", json(snapshot.dimensionDisplayName(), registries));
-        tag.putInt("experience_level", snapshot.experienceLevel());
-        return tag;
+        return (CompoundTag) codec(registries).encodeStart(NbtOps.INSTANCE, snapshot).getOrThrow();
     }
 
     public static Optional<DogTagSnapshot> decode(CompoundTag tag, HolderLookup.Provider registries) {
         try {
-            if (!tag.contains("schema", Tag.TAG_INT) || tag.getInt("schema") != SNAPSHOT_SCHEMA
-                    || !tag.hasUUID("owner_id") || !tag.contains("owner_name", Tag.TAG_STRING)
-                    || !tag.contains("owner_display", Tag.TAG_STRING)
-                    || !tag.contains("death_message", Tag.TAG_STRING)
-                    || !tag.contains("dimension_id", Tag.TAG_STRING)
-                    || !tag.contains("dimension_display", Tag.TAG_STRING)) {
-                return Optional.empty();
-            }
-            Optional<EntityIdentity> killer = Optional.empty();
-            if (tag.contains("killer", Tag.TAG_COMPOUND)) {
-                CompoundTag value = tag.getCompound("killer");
-                if (!value.hasUUID("id") || !value.contains("type", Tag.TAG_STRING)
-                        || !value.contains("display", Tag.TAG_STRING)) return Optional.empty();
-                killer = Optional.of(new EntityIdentity(value.getUUID("id"), ResourceLocation.parse(value.getString("type")),
-                        component(value.getString("display"), registries)));
-            }
-            return Optional.of(new DogTagSnapshot(
-                    tag.getUUID("owner_id"),
-                    tag.getString("owner_name"),
-                    component(tag.getString("owner_display"), registries),
-                    killer,
-                    component(tag.getString("death_message"), registries),
-                    new BlockPos(tag.getInt("x"), tag.getInt("y"), tag.getInt("z")),
-                    ResourceLocation.parse(tag.getString("dimension_id")),
-                    component(tag.getString("dimension_display"), registries),
-                    tag.getInt("experience_level")));
+            return codec(registries).parse(NbtOps.INSTANCE, tag).result();
         } catch (RuntimeException exception) {
             KillConfirmed.LOGGER.error("Rejected malformed dog tag snapshot", exception);
             return Optional.empty();
@@ -78,21 +63,12 @@ public final class DogTagSnapshotCodec {
 
     public static Optional<DogTagSnapshot> read(ItemStack stack, HolderLookup.Provider registries) {
         if (stack.isEmpty() || stack.getItem() != KillConfirmed.dogTag()) return Optional.empty();
-        CustomData data = stack.get(DataComponents.CUSTOM_DATA);
-        if (data == null) return Optional.empty();
-        CompoundTag root = data.copyTag();
-        return root.contains(ROOT_KEY, Tag.TAG_COMPOUND)
-                ? decode(root.getCompound(ROOT_KEY), registries)
-                : Optional.empty();
+        return CompoundTag.CODEC.fieldOf(ROOT_KEY).codec()
+                .parse(NbtOps.INSTANCE, MinecraftData.of(registries).customData(stack)).result()
+                .flatMap(tag -> decode(tag, registries));
     }
 
     static String json(Component component, HolderLookup.Provider registries) {
-        return Component.Serializer.toJson(component, registries);
-    }
-
-    static Component component(String json, HolderLookup.Provider registries) {
-        Component component = Component.Serializer.fromJson(json, registries);
-        if (component == null) throw new IllegalArgumentException("Component JSON decoded to null");
-        return component;
+        return MinecraftData.of(registries).json(component);
     }
 }

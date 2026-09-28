@@ -2,7 +2,7 @@
 
 [简体中文](customization.zh-CN.md)
 
-This guide and its downloadable examples use Kill Confirmed 1.0.1 for Minecraft 1.21.1.
+This guide covers Kill Confirmed 1.1.0. The downloadable Field Notes datapack targets Minecraft 1.21.1; for 26.x, update its pack metadata to match your Minecraft version.
 
 ## Choose where tags appear
 
@@ -128,6 +128,6 @@ Add a matching line to `lore_template`:
 
 Each registered function runs as the player who died. It can read the death snapshot from `storage kill_confirmed:scratch input` and append its results to `output`. Use your own namespace; `kill_confirmed` is reserved for built-in placeholders. Each output `component` is a JSON text-component string.
 
-In 1.0.1 on Minecraft 1.21.1, a death triggered from inside another command function can omit these datapack-provided values. The screenshot example was verified with a natural zombie attack.
+Provider functions finish before the dog tag is created, including when another command function triggers the death. Nested provider functions can also contribute values.
 
 For the complete snapshot, output limits and Java extension API, see [Integration reference](integration.md).

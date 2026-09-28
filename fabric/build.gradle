@@ -11,7 +11,8 @@ base { archivesName = "${modId}-fabric" }
 
 sourceSets.main.java.srcDirs += [
         root.file('common/src/main/java'),
-        root.file('portable/src/main/java')
+        root.file('portable/src/main/java'),
+        root.file('adapters/1.21')
 ]
 sourceSets.main.resources.srcDir root.file('common/src/main/resources')
 
@@ -21,10 +22,12 @@ dependencies {
     mappings loom.officialMojangMappings()
     modImplementation "net.fabricmc:fabric-loader:${root.property('fabric_loader_version')}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${root.property('fabric_api_version')}"
-    modImplementation "maven.modrinth:rinlib:${root.property('rinlib_version')}+${root.property('minecraft_version')}-fabric"
+    if (root.hasProperty('rinlibJar')) modImplementation files(root.property('rinlibJar'))
+    else modImplementation "maven.modrinth:rinlib:${root.property('rinlib_version')}+${root.property('minecraft_version')}-fabric"
 }
 
 def resourceProperties = [
+        java_version: root.property('java_version'),
         mod_id: modId,
         mod_name: root.property('mod_name'),
         mod_version: root.property('mod_version'),

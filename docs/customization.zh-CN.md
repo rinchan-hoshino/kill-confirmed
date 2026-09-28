@@ -2,7 +2,7 @@
 
 [English](customization.md)
 
-本教程及配套示例使用 Minecraft 1.21.1 的 Kill Confirmed 1.0.1。
+本教程适用于 Kill Confirmed 1.1.0。可下载的 Field Notes 数据包面向 Minecraft 1.21.1；在 26.x 使用时，需要将其数据包元信息更新为对应 Minecraft 版本的格式。
 
 ## 狗牌的交付方式
 
@@ -128,6 +128,6 @@ data modify storage kill_confirmed:scratch output append value {id:"example:rank
 
 每个函数以死亡玩家的身份执行，可以从 `storage kill_confirmed:scratch input` 读取死亡快照，并向 `output` 追加结果。自定义键使用自己的命名空间；`kill_confirmed` 保留给内建字段。输出中的 `component` 是 JSON 文本组件字符串。
 
-Minecraft 1.21.1 的 1.0.1 版中，在另一个命令函数内触发死亡时，可能无法记录数据包提供的字段。截图示例使用僵尸自然攻击造成的死亡验证。
+狗牌会等待提供信息的函数执行完毕后再生成，包括在其他命令函数中触发死亡的情况。提供信息的函数也可以调用嵌套函数来补充字段。
 
 完整的快照结构、输出限制和 Java 扩展方式见 [Integration reference](integration.md)。

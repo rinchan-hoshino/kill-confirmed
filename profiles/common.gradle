@@ -1,0 +1,80 @@
+import groovy.json.JsonSlurper
+import groovy.json.JsonOutput
+
+ext.sourceRoot = rootProject.file('..')
+ext.minecraft = project.property('profile')
+ext.modLoader = project.property('loader')
+ext.target = new JsonSlurper().parse(new File(sourceRoot, 'profiles.json'))[minecraft]
+if (target == null) throw new GradleException("Unsupported Minecraft version ${minecraft}")
+ext.releaseProperties = new Properties()
+new File(sourceRoot, 'gradle.properties').withInputStream { releaseProperties.load(it) }
+group = releaseProperties.mod_group_id
+version = releaseProperties.mod_version + '+' + minecraft
+base { archivesName = "kill_confirmed-${modLoader}" }
+layout.buildDirectory = new File(sourceRoot, "build/profiles/${minecraft}-${modLoader}")
+java.toolchain.languageVersion = JavaLanguageVersion.of(target.java as int)
+repositories {
+    mavenCentral()
+    exclusiveContent {
+        forRepository { maven { url = 'https://api.modrinth.com/maven' } }
+        filter { includeGroup 'maven.modrinth' }
+    }
+}
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+tasks.withType(AbstractArchiveTask).configureEach {
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+}
+
+// 26.x renamed public identifier and networking APIs. Generate aliases without branching gameplay code.
+def generatedJava = tasks.register('prepareJava', Sync) {
+    inputs.file new File(sourceRoot, 'profiles/common.gradle')
+    inputs.property 'minecraft', minecraft
+    from new File(sourceRoot, 'common/src/main/java')
+    from new File(sourceRoot, 'portable/src/main/java')
+    from new File(sourceRoot, "${modLoader}/src/main/java")
+    from new File(sourceRoot, "adapters/${target.adapter}")
+    include '**/*.java'
+    into layout.buildDirectory.dir('generated/java')
+    if (target.adapter == '26') {
+        filter { String line -> line.replaceAll('\\bResourceLocation\\b', 'Identifier')
+                .replace('PayloadTypeRegistry.playS2C()', 'PayloadTypeRegistry.clientboundPlay()')
+                .replace('.dimension().location()', '.dimension().identifier()') }
+    }
+}
+sourceSets.main.java.setSrcDirs([generatedJava])
+sourceSets.main.resources.srcDir(new File(sourceRoot, 'common/src/main/resources'))
+
+def generatedMetadata = tasks.register('prepareMetadata') {
+    inputs.file new File(sourceRoot, 'profiles.json')
+    inputs.file new File(sourceRoot, 'gradle.properties')
+    inputs.file new File(sourceRoot, modLoader == 'fabric' ? 'fabric/src/main/resources/fabric.mod.json' : 'neoforge/src/main/templates/META-INF/neoforge.mods.toml')
+    inputs.property 'profile', minecraft
+    inputs.property 'loader', modLoader
+    outputs.dir layout.buildDirectory.dir('generated/metadata')
+    doLast {
+        def dest = layout.buildDirectory.dir('generated/metadata').get().asFile
+        dest.mkdirs()
+        def values = releaseProperties.collectEntries { k, v -> [(k): v] } + [
+                mod_version: project.version, minecraft_version: minecraft,
+                minecraft_version_range: "[${minecraft}]", java_version: target.java,
+                fabric_loader_version: target.fabric_loader, fabric_api_version: target.fabric_api,
+                neo_version_range: "[${target.neo},)", loader_version_range: target.fml]
+        def path = modLoader == 'fabric' ? 'fabric.mod.json' : 'META-INF/neoforge.mods.toml'
+        def template = new File(sourceRoot, modLoader == 'fabric' ? "fabric/src/main/resources/${path}" : "neoforge/src/main/templates/${path}")
+        def out = new File(dest, path)
+        out.parentFile.mkdirs()
+        out.text = new groovy.text.SimpleTemplateEngine().createTemplate(template).make(values).toString()
+    }
+}
+sourceSets.main.resources.srcDir(generatedMetadata)
+processResources {
+    inputs.property 'profile', minecraft
+    filesMatching('kill_confirmed.mixins.json') {
+        filter { String line -> line.replace('JAVA_21', "JAVA_${target.java}") }
+    }
+    doLast {
+        new File(destinationDir, 'pack.mcmeta').text = JsonOutput.prettyPrint(JsonOutput.toJson([pack: target.pack + [description: 'Kill Confirmed resources']])) + '\n'
+    }
+}
+jar { from(new File(sourceRoot, 'LICENSE')) { into 'META-INF'; rename { 'LICENSE_kill_confirmed' } } }

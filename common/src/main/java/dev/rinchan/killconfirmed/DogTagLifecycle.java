@@ -2,14 +2,13 @@ package dev.rinchan.killconfirmed;
 
 import dev.rinchan.killconfirmed.api.DogTagSnapshot;
 import dev.rinchan.killconfirmed.api.EntityIdentity;
-import dev.rinchan.killconfirmed.portable.DropAction;
-import dev.rinchan.killconfirmed.portable.DropStrategyMachine;
-import dev.rinchan.killconfirmed.portable.PendingState;
+import dev.rinchan.killconfirmed.portable.DropStrategy;
+import dev.rinchan.rinlib.minecraft.MinecraftData;
+import dev.rinchan.rinlib.minecraft.PlayerContext;
 import java.util.Optional;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
@@ -22,23 +21,17 @@ public final class DogTagLifecycle {
 
     public static void onDeath(ServerPlayer player, DamageSource source) {
         PendingDogTagCarrier carrier = carrier(player);
-        PendingState pending = carrier.killConfirmed$pendingDogTag().isPresent()
-                ? PendingState.PENDING : PendingState.EMPTY;
-        var transition = DropStrategyMachine.onDeath(KillConfirmed.config().dropStrategy(), pending);
-        if (transition.action() == DropAction.NOOP) {
-            KillConfirmed.LOGGER.error("Refused to create a second pending dog tag for {}", player.getGameProfile().getName());
+        if (carrier.killConfirmed$hasPendingDogTag()) {
+            KillConfirmed.LOGGER.error("Refused to create a second pending dog tag for {}", PlayerContext.name(player));
             return;
         }
 
         DogTagSnapshot snapshot = capture(player, source);
         ItemStack stack = DogTagItemFactory.create(player, snapshot);
-        if (transition.action() == DropAction.DROP_AT_DEATH) {
+        if (KillConfirmed.config().dropStrategy() == DropStrategy.AT_DEATH_POSITION) {
             dropExactlyHere(player, stack, "death");
-        } else if (transition.action() == DropAction.STORE_PENDING) {
-            TagAssertions.compound(stack.save(player.registryAccess()), serialized ->
-                    carrier.killConfirmed$setPendingDogTag(serialized));
         } else {
-            throw new IllegalStateException("Unexpected death transition " + transition.action());
+            carrier.killConfirmed$setPendingDogTag(MinecraftData.of(player.registryAccess()).saveItem(stack));
         }
     }
 
@@ -51,9 +44,9 @@ public final class DogTagLifecycle {
         Optional<CompoundTag> pending = carrier(player).killConfirmed$takePendingDogTag();
         if (pending.isEmpty()) return;
 
-        Optional<ItemStack> decoded = ItemStack.parse(player.registryAccess(), pending.get());
+        Optional<ItemStack> decoded = MinecraftData.of(player.registryAccess()).loadItem(pending.get());
         if (decoded.isEmpty() || decoded.get().isEmpty()) {
-            KillConfirmed.LOGGER.error("Rejected malformed pending dog tag for {}", player.getGameProfile().getName());
+            KillConfirmed.LOGGER.error("Rejected malformed pending dog tag for {}", PlayerContext.name(player));
             return;
         }
 
@@ -70,13 +63,13 @@ public final class DogTagLifecycle {
                         attacker.getUUID(),
                         BuiltInRegistries.ENTITY_TYPE.getKey(attacker.getType()),
                         attacker.getDisplayName()));
-        ResourceLocation dimension = player.level().dimension().location();
+        var dimension = player.level().dimension().location();
         String translationKey = "dimension." + dimension.getNamespace() + "."
                 + dimension.getPath().replace('/', '.');
         Component dimensionDisplay = Component.translatableWithFallback(translationKey, dimension.toString());
         return new DogTagSnapshot(
                 player.getUUID(),
-                player.getGameProfile().getName(),
+                PlayerContext.name(player),
                 player.getDisplayName(),
                 killer,
                 source.getLocalizedDeathMessage(player),
@@ -91,23 +84,13 @@ public final class DogTagLifecycle {
     }
 
     private static void dropExactlyHere(ServerPlayer player, ItemStack stack, String phase) {
-        ServerLevel level = player.serverLevel();
+        ServerLevel level = (ServerLevel) player.level();
         ItemEntity item = new ItemEntity(level, player.getX(), player.getY(), player.getZ(), stack);
         item.setDefaultPickUpDelay();
         if (!level.addFreshEntity(item)) {
             KillConfirmed.LOGGER.error("Failed to create dog tag entity at {} position for {}",
-                    phase, player.getGameProfile().getName());
+                    phase, PlayerContext.name(player));
         }
     }
 
-    private static final class TagAssertions {
-        private TagAssertions() {}
-
-        static void compound(net.minecraft.nbt.Tag tag, java.util.function.Consumer<CompoundTag> consumer) {
-            if (!(tag instanceof CompoundTag compound)) {
-                throw new IllegalStateException("Serialized dog tag was not a compound");
-            }
-            consumer.accept(compound);
-        }
-    }
 }

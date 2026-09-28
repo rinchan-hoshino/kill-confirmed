@@ -1,0 +1,10 @@
+plugins { id 'net.neoforged.moddev' version '2.0.144' }
+apply from: 'common.gradle'
+dependencies {
+    if (project.hasProperty('rinlibJar')) implementation files(project.property('rinlibJar'))
+    else implementation "maven.modrinth:rinlib:${releaseProperties.rinlib_version}+${minecraft}-neoforge"
+}
+neoForge {
+    version = target.neo
+    mods { kill_confirmed { sourceSet(sourceSets.main) } }
+}
