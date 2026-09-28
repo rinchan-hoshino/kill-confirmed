@@ -1,5 +1,7 @@
 # Kill Confirmed
 
+<img src="docs/icon.png" alt="Kill Confirmed" width="200" height="200">
+
 Kill Confirmed creates a dog tag when a player dies, for records or keepsakes.
 
 You can customize the information recorded on a dog tag, including:

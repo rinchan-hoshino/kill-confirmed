@@ -1,5 +1,7 @@
 # Kill Confirmed
 
+<img src="docs/icon.png" alt="Kill Confirmed" width="200" height="200">
+
 Kill Confirmed 会在玩家死亡时生成一枚狗牌，可用于记录或纪念。
 
 你可以自定义狗牌上记录的信息，包括：
