@@ -38,7 +38,10 @@ def generatedJava = tasks.register('prepareJava', Sync) {
     if (target.adapter == '26') {
         filter { String line -> line.replaceAll('\\bResourceLocation\\b', 'Identifier')
                 .replace('PayloadTypeRegistry.playS2C()', 'PayloadTypeRegistry.clientboundPlay()')
-                .replace('.dimension().location()', '.dimension().identifier()') }
+                .replace('.dimension().location()', '.dimension().identifier()')
+                .replace('.getDayTime()', '.getOverworldClockTime()')
+                .replace('ComponentUtils.updateForEntity(commandSource, data.component(json.toString()), player, 0)',
+                        'ComponentUtils.resolve(net.minecraft.network.chat.ResolutionContext.create(commandSource), data.component(json.toString()), 0)') }
     }
 }
 sourceSets.main.java.setSrcDirs([generatedJava])

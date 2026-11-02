@@ -20,13 +20,15 @@ public final class DogTagLifecycle {
     private DogTagLifecycle() {}
 
     public static void onDeath(ServerPlayer player, DamageSource source) {
+        if (KillConfirmed.config().playerKillsOnly()
+                && (!(source.getEntity() instanceof ServerPlayer) || source.getEntity() == player)) return;
         if (KillConfirmed.PENDING_DOG_TAG.get(player).isPresent()) {
             KillConfirmed.LOGGER.error("Refused to create a second pending dog tag for {}", PlayerContext.name(player));
             return;
         }
 
         DogTagSnapshot snapshot = capture(player, source);
-        ItemStack stack = DogTagItemFactory.create(player, snapshot);
+        ItemStack stack = DogTagItemFactory.create(player, snapshot, source);
         if (KillConfirmed.config().dropStrategy() == DropStrategy.AT_DEATH_POSITION) {
             dropExactlyHere(player, stack, "death");
         } else {
@@ -63,8 +65,8 @@ public final class DogTagLifecycle {
                         BuiltInRegistries.ENTITY_TYPE.getKey(attacker.getType()),
                         attacker.getDisplayName()));
         var dimension = player.level().dimension().location();
-        String translationKey = "dimension." + dimension.getNamespace() + "."
-                + dimension.getPath().replace('/', '.');
+        String translationKey = "kill_confirmed.dimension." + dimension.getNamespace() + "."
+                + dimension.getPath();
         Component dimensionDisplay = Component.translatableWithFallback(translationKey, dimension.toString());
         return new DogTagSnapshot(
                 player.getUUID(),

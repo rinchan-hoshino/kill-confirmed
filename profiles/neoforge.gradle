@@ -1,6 +1,8 @@
 plugins { id 'net.neoforged.moddev' version '2.0.144' }
 apply from: 'common.gradle'
 dependencies {
+    // NeoForge supplies NightConfig in its boot layer; bundling it creates duplicate modules.
+    compileOnly 'com.electronwill.night-config:toml:3.8.3'
     def rinlib = "maven.modrinth:rinlib:${releaseProperties.rinlib_version}+${minecraft}-neoforge"
     if (project.hasProperty('rinlibJar')) {
         def localJar = file(project.property('rinlibJar'))

@@ -32,6 +32,8 @@ sourceSets.main.resources.srcDir tasks.register('generateModMetadata', ProcessRe
 }
 
 dependencies {
+    // NeoForge supplies NightConfig in its boot layer; bundling it creates duplicate modules.
+    compileOnly 'com.electronwill.night-config:toml:3.8.3'
     def rinlib = "maven.modrinth:rinlib:${rootProject.rinlib_version}+${rootProject.minecraft_version}-neoforge"
     if (rootProject.hasProperty('rinlibNeoJar')) {
         def localJar = file(rootProject.property('rinlibNeoJar'))

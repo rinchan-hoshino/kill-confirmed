@@ -13,6 +13,10 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.LivingEntity;
+import java.util.Optional;
 
 public final class PlaceholderResolver {
     private static final PlaceholderRegistry<PlaceholderContext> JAVA_PROVIDERS = new PlaceholderRegistry<>();
@@ -27,26 +31,25 @@ public final class PlaceholderResolver {
                 DogTagSnapshotCodec.json(component, context.player().registryAccess()))));
     }
 
-    static Map<PlaceholderKey, JsonElement> resolve(PlaceholderContext context) {
+    static Map<PlaceholderKey, JsonElement> resolve(PlaceholderContext context, DamageSource source) {
         var snapshot = context.snapshot();
         SnapshotFields fields = new SnapshotFields(
-                json(snapshot.ownerDisplayName(), context),
+                json(Component.literal(snapshot.ownerName()), context),
                 snapshot.killer().map(identity -> json(identity.displayName(), context)),
+                source.getEntity() instanceof LivingEntity killer && source.getEntity() != context.player()
+                        && !killer.getMainHandItem().isEmpty()
+                        ? Optional.of(json(killer.getMainHandItem().getHoverName(), context)) : Optional.empty(),
                 json(snapshot.deathMessage(), context),
                 snapshot.deathPosition().getX(),
                 snapshot.deathPosition().getY(),
                 snapshot.deathPosition().getZ(),
                 snapshot.dimensionId().toString(),
                 json(snapshot.dimensionDisplayName(), context),
-                snapshot.experienceLevel());
+                snapshot.experienceLevel(),
+                context.player().level().getDayTime() / 24000 + 1);
 
         Map<PlaceholderKey, JsonElement> result = new LinkedHashMap<>(BuiltInFields.from(fields));
         result.putAll(JAVA_PROVIDERS.resolve(context, KillConfirmed.LOGGER::error));
-        DatapackPlaceholderBridge.resolve(context.player(), snapshot).forEach((key, value) -> {
-            if (result.putIfAbsent(key, value) != null) {
-                KillConfirmed.LOGGER.error("Datapack placeholder {} rejected because that key already has an owner", key);
-            }
-        });
         return Collections.unmodifiableMap(result);
     }
 

@@ -3,42 +3,44 @@ package dev.rinchan.killconfirmed.portable;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.Set;
+import java.util.function.BiConsumer;
 
+/** Resolves each lore line independently; unavailable values hide their entire line. */
 public final class TemplateDocument {
-    private final List<Line> lines;
+    private final List<String> lines;
+    private final Set<Integer> warnedLines = new HashSet<>();
 
-    private TemplateDocument(List<Line> lines) { this.lines = List.copyOf(lines); }
+    public TemplateDocument(List<String> lines) { this.lines = List.copyOf(lines); }
 
     public static TemplateDocument parse(String json) {
-        try {
-            JsonElement root = JsonParser.parseString(json);
-            if (!root.isJsonArray()) throw new TemplateException("Lore template root must be an array");
-            List<Line> lines = new ArrayList<>();
-            for (JsonElement element : root.getAsJsonArray()) {
-                if (!element.isJsonObject()) throw new TemplateException("Every lore template line must be an object");
-                JsonObject object = element.getAsJsonObject();
-                if (!object.has("component")) throw new TemplateException("Lore template line is missing component");
-                Optional<PlaceholderKey> condition = Optional.empty();
-                if (object.has("when")) condition = Optional.of(PlaceholderKey.parse(object.get("when").getAsString()));
-                lines.add(new Line(condition, object.get("component").deepCopy()));
-            }
-            return new TemplateDocument(lines);
-        } catch (JsonParseException | IllegalStateException exception) {
-            throw new TemplateException("Malformed lore template JSON", exception);
-        }
+        var root = JsonParser.parseString(json).getAsJsonArray();
+        return new TemplateDocument(root.asList().stream().map(JsonElement::toString).toList());
     }
 
     public List<JsonElement> render(Map<PlaceholderKey, JsonElement> values) {
-        List<JsonElement> rendered = new ArrayList<>();
-        for (Line line : lines) {
-            if (line.condition().isPresent() && !values.containsKey(line.condition().get())) continue;
-            rendered.add(resolve(line.component(), values));
+        return render(values, component -> component, (line, failure) -> {});
+    }
+
+    @FunctionalInterface
+    public interface ComponentParser<T> { T parse(JsonElement component) throws Exception; }
+
+    public <T> List<T> render(Map<PlaceholderKey, JsonElement> values, ComponentParser<T> parser,
+            BiConsumer<Integer, Exception> failureReporter) {
+        List<T> rendered = new ArrayList<>();
+        for (int index = 0; index < lines.size(); index++) {
+            try {
+                rendered.add(parser.parse(resolve(JsonParser.parseString(lines.get(index)), values)));
+            } catch (MissingPlaceholder ignored) {
+                // A missing optional value hides this line, including all its labels.
+            } catch (Exception failure) {
+                if (warnedLines.add(index)) failureReporter.accept(index + 1, failure);
+            }
         }
         return List.copyOf(rendered);
     }
@@ -46,14 +48,25 @@ public final class TemplateDocument {
     private static JsonElement resolve(JsonElement node, Map<PlaceholderKey, JsonElement> values) {
         if (node.isJsonObject()) {
             JsonObject object = node.getAsJsonObject();
-            if (object.size() == 1 && object.has("placeholder")) {
-                PlaceholderKey key = PlaceholderKey.parse(object.get("placeholder").getAsString());
-                JsonElement value = values.get(key);
-                if (value == null) throw new TemplateException("Missing placeholder: " + key);
-                return value.deepCopy();
-            }
             JsonObject copy = new JsonObject();
-            for (var entry : object.entrySet()) copy.add(entry.getKey(), resolve(entry.getValue(), values));
+            if (object.has("placeholder")) {
+                String name = object.get("placeholder").getAsString();
+                PlaceholderKey key = name.contains(":") ? PlaceholderKey.parse(name)
+                        : new PlaceholderKey(BuiltInFields.NAMESPACE, name);
+                JsonElement value = values.get(key);
+                if (value == null) throw new MissingPlaceholder();
+                if (value.isJsonObject()) copy = value.deepCopy().getAsJsonObject();
+                else {
+                    copy.addProperty("text", "");
+                    JsonArray extra = new JsonArray();
+                    extra.add(value.deepCopy());
+                    copy.add("extra", extra);
+                }
+            }
+            for (var entry : object.entrySet()) {
+                if (!entry.getKey().equals("placeholder"))
+                    copy.add(entry.getKey(), resolve(entry.getValue(), values));
+            }
             return copy;
         }
         if (node.isJsonArray()) {
@@ -64,5 +77,5 @@ public final class TemplateDocument {
         return node.deepCopy();
     }
 
-    private record Line(Optional<PlaceholderKey> condition, JsonElement component) {}
+    private static final class MissingPlaceholder extends RuntimeException {}
 }

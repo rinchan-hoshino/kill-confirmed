@@ -1,133 +1,61 @@
-# Customizing dog tags
+# Dog tag customization
 
-[简体中文](customization.zh-CN.md)
+## Configuration
 
-This guide covers Kill Confirmed 1.1.0. The downloadable Field Notes datapack targets Minecraft 1.21.1; for 26.x, update its pack metadata to match your Minecraft version.
+First launch creates `config/kill_confirmed.toml`. Edit it with the game/server stopped, then restart. On a server, only the server's configuration is used. Changes affect new tags; existing tags keep their recorded text.
 
-## Choose where tags appear
+```toml
+# Where the dog tag goes: "death_position" (drops where you died) or "respawn_inventory" (given to you on respawn)
+drop = "death_position"
+# Only create a dog tag when another player is the killer
+player_kills_only = false
+# Optional mcfunction id, run as the dead player at the death position (permission level 2, output silenced) right before the tag is built.
+# Use it to fill scoreboards/storage, then read them in lore with vanilla "score"/"nbt" text components.
+function = ""
+# One entry per lore line, each a JSON text component. {"placeholder":"<name>"} inserts a value.
+# A line that uses a placeholder with no value (e.g. killer on an environmental death) is hidden.
+lore = [
+  '{"placeholder":"death_message","color":"gray","italic":false}',
+  '{"text":"","color":"gray","italic":false,"extra":[{"placeholder":"x"},{"text":", "},{"placeholder":"y"},{"text":", "},{"placeholder":"z"},{"text":"  "},{"placeholder":"dimension","color":"#808080"}]}',
+  '{"translate":"kill_confirmed.lore.level_day","color":"#808080","italic":false,"with":[{"placeholder":"level","color":"#E2C88C"},{"placeholder":"day","color":"#E2C88C"}]}',
+]
+```
 
-Start the game or server once to create `config/kill_confirmed.json`. Stop it before editing, then restart to load the changes. For multiplayer, edit the server's file; for singleplayer, edit the file in your game directory.
+`drop` accepts `death_position` (default) or `respawn_inventory`. `player_kills_only = true` limits tags to deaths caused by another player. Death-position tags follow normal item physics: they can be destroyed in lava or the void. Use `respawn_inventory` to keep them out of those hazards.
 
-Set `drop_strategy` to one of these values:
+Each `lore` string is one vanilla JSON text component. `{"placeholder":"name"}` inserts a component recursively, including inside `extra` and `with`; styles on the placeholder object override that value's styles. Any missing value hides the whole line. Invalid JSON/components hide that line and log one warning with its line number.
 
-| Value | Result |
+| Placeholder | Value |
 | --- | --- |
-| `AT_DEATH_POSITION` | Drop the tag at the player's death position. This is the default. |
-| `ON_RESPAWN_INVENTORY` | Put the tag in the player's inventory after respawning. Any tag that does not fit drops at the respawn position. |
+| `player` | Deceased player's name |
+| `killer` | Killer's display name; absent without a killer |
+| `weapon` | Killer's main-hand item name; absent with an empty hand or no killer |
+| `death_message` | Unmodified vanilla death-message component |
+| `x`, `y`, `z` | Integer death block coordinates |
+| `dimension` | Localized dimension name, falling back to its ID |
+| `level` | Experience level at death |
+| `day` | World day: `level.getDayTime() / 24000 + 1` |
 
-The configuration affects newly created tags. Existing tags retain the information and formatting recorded when they were created.
+Vanilla `score`, `nbt` and `selector` components resolve as the deceased player at the death position. The optional `function` runs first with permission level 2 and suppressed output, including when another function caused the death. The old JSON configuration and datapack provider protocol are no longer used; an old configuration causes one startup warning and is not migrated.
 
-## Choose which information to display
+### Add a custom line with a function
 
-`lore_template` is an ordered list of tooltip lines. Each line contains a Minecraft JSON text component in `component`. Insert a recorded value with a node containing only `placeholder`:
-
-```json
-{
-  "drop_strategy": "AT_DEATH_POSITION",
-  "lore_template": [
-    {
-      "component": {
-        "text": "Owner: ",
-        "color": "gold",
-        "italic": false,
-        "extra": [{"placeholder": "kill_confirmed:owner"}]
-      }
-    },
-    {
-      "when": "kill_confirmed:killer",
-      "component": {
-        "text": "Killer: ",
-        "color": "red",
-        "italic": false,
-        "extra": [{"placeholder": "kill_confirmed:killer"}]
-      }
-    }
-  ]
-}
-```
-
-The item name already identifies its owner. Adding an owner line is optional.
-
-| Placeholder | Recorded value |
-| --- | --- |
-| `kill_confirmed:owner` | The deceased player's display name |
-| `kill_confirmed:killer` | The killer's display name, when available |
-| `kill_confirmed:death_message` | The game's death message |
-| `kill_confirmed:coordinates` | Death coordinates |
-| `kill_confirmed:dimension` | Dimension display name |
-| `kill_confirmed:dimension_id` | Dimension ID, such as `minecraft:overworld` |
-| `kill_confirmed:level` | Experience level at death |
-
-`when` includes a line only when its named placeholder exists. Use it for the killer and other optional information. For example, an environmental death can have no killer. A missing placeholder on an unconditional line is a template error.
-
-## Colors, formatting and localization
-
-Use `color`, `bold`, `italic`, `underlined`, `extra` and `translate` in the text components. Hex colors such as `#64D8DD` work too. A blank line is `{"component":{"text":""}}`.
-
-Keep the placeholder node itself to `{"placeholder":"namespace:key"}`. Apply styling on its parent component:
+For Minecraft 1.21.1, create `world/datapacks/tag_stats/pack.mcmeta`:
 
 ```json
-{
-  "component": {
-    "text": "LEVEL  ",
-    "color": "gray",
-    "italic": false,
-    "extra": [
-      {
-        "text": "",
-        "color": "#F5D282",
-        "bold": true,
-        "extra": [{"placeholder": "kill_confirmed:level"}]
-      }
-    ]
-  }
-}
+{"pack":{"pack_format":34,"description":"Dog tag statistics"}}
 ```
 
-Built-in values retain their native text components, including formatting and translation keys. The [default configuration](examples/default/kill_confirmed.json) uses translation keys for its labels; literal text in a custom template appears exactly as written.
-
-## Reproduce the Field Notes screenshot
-
-1. Stop the game or server and save a copy of your current configuration.
-2. Replace `config/kill_confirmed.json` with [the Field Notes configuration](examples/showcase/kill_confirmed.json).
-3. Download [field-notes.zip](examples/showcase/field-notes.zip?raw=true) and put it in your world's `datapacks` directory. Keep the ZIP intact.
-4. Restart the game or server, then create a new death record through a normal in-game death.
-
-This example combines a colored title, styled sections, conditional killer information and the recorded death details. Its accompanying datapack supplies the decorative title **Pathfinder** and chapter **CH. 07 / The long way home**. Edit those two example labels in the [function](examples/showcase/field-notes/data/showcase/function/tag_details.mcfunction) to fit your world.
-
-![A dog tag using the Field Notes configuration](images/custom-dog-tag.png)
-
-To restore the default layout, use [the default configuration](examples/default/kill_confirmed.json) and restart.
-
-## Add information with a datapack
-
-Register a function in `data/kill_confirmed/tags/function/placeholder_providers.json`:
-
-```json
-{"values":["example:tag_details"]}
-```
-
-Create `data/example/function/tag_details.mcfunction`:
+Create `world/datapacks/tag_stats/data/example/function/dog_tag.mcfunction`:
 
 ```mcfunction
-data modify storage kill_confirmed:scratch output append value {id:"example:rank",component:'{"text":"Pathfinder","color":"aqua"}'}
+scoreboard players set @s kc_kills 7
 ```
 
-Add a matching line to `lore_template`:
+Run `/scoreboard objectives add kc_kills dummy` once, then `/reload`. Set `function = "example:dog_tag"` in the TOML and append this string inside its `lore` array:
 
-```json
-{
-  "when": "example:rank",
-  "component": {
-    "text": "Title: ",
-    "italic": false,
-    "extra": [{"placeholder": "example:rank"}]
-  }
-}
+```toml
+  '{"text":"Kills: ","color":"#808080","italic":false,"extra":[{"score":{"name":"@s","objective":"kc_kills"},"color":"#E2C88C"}]}'
 ```
 
-Each registered function runs as the player who died. It can read the death snapshot from `storage kill_confirmed:scratch input` and append its results to `output`. Use your own namespace; `kill_confirmed` is reserved for built-in placeholders. Each output `component` is a JSON text-component string.
-
-Provider functions finish before the dog tag is created, including when another command function triggers the death. Nested provider functions can also contribute values.
-
-For the complete snapshot, output limits and Java extension API, see [Integration reference](integration.md).
+After restarting, new tags include `Kills: 7`. Replace `7` in the function with your own calculation. For 26.x, use the datapack format for your Minecraft version (listed in `profiles.json`). A complete [configuration and datapack](examples/showcase/) is included.

@@ -22,4 +22,6 @@ public final class ProbePlayers {
     }
     public static CompoundTag save(ServerPlayer player) { return player.saveWithoutId(new CompoundTag()); }
     public static void load(ServerPlayer player, CompoundTag tag) { player.load(tag); }
+    public static void kill(ServerPlayer player, net.minecraft.world.damagesource.DamageSource source) { player.hurt(source, 1000); }
+
 }

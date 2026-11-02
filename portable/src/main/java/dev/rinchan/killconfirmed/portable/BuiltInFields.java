@@ -1,9 +1,7 @@
 package dev.rinchan.killconfirmed.portable;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -14,27 +12,24 @@ public final class BuiltInFields {
 
     public static Map<PlaceholderKey, JsonElement> from(SnapshotFields fields) {
         Map<PlaceholderKey, JsonElement> values = new LinkedHashMap<>();
-        values.put(key("owner"), fields.owner().deepCopy());
+        values.put(key("player"), fields.owner().deepCopy());
         fields.killer().ifPresent(killer -> values.put(key("killer"), killer.deepCopy()));
+        fields.weapon().ifPresent(weapon -> values.put(key("weapon"), weapon.deepCopy()));
         values.put(key("death_message"), fields.deathMessage().deepCopy());
-        values.put(key("coordinates"), translated("tooltip.kill_confirmed.coordinates.value",
-                new JsonPrimitive(fields.x()), new JsonPrimitive(fields.y()), new JsonPrimitive(fields.z())));
+        values.put(key("x"), literal(Integer.toString(fields.x())));
+        values.put(key("y"), literal(Integer.toString(fields.y())));
+        values.put(key("z"), literal(Integer.toString(fields.z())));
         values.put(key("dimension"), fields.dimensionDisplay().deepCopy());
-        JsonObject dimensionId = new JsonObject();
-        dimensionId.addProperty("text", fields.dimensionId());
-        values.put(key("dimension_id"), dimensionId);
-        values.put(key("level"), translated("tooltip.kill_confirmed.level.value", new JsonPrimitive(fields.level())));
+        values.put(key("level"), literal(Integer.toString(fields.level())));
+        values.put(key("day"), literal(Long.toString(fields.day())));
         return Collections.unmodifiableMap(values);
     }
 
     private static PlaceholderKey key(String path) { return new PlaceholderKey(NAMESPACE, path); }
 
-    private static JsonObject translated(String key, JsonElement... arguments) {
+    private static JsonObject literal(String text) {
         JsonObject component = new JsonObject();
-        component.addProperty("translate", key);
-        JsonArray with = new JsonArray();
-        for (JsonElement argument : arguments) with.add(argument);
-        component.add("with", with);
+        component.addProperty("text", text);
         return component;
     }
 }

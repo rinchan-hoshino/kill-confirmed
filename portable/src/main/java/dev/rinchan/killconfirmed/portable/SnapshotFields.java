@@ -7,16 +7,19 @@ import java.util.Optional;
 public record SnapshotFields(
         JsonElement owner,
         Optional<JsonElement> killer,
+        Optional<JsonElement> weapon,
         JsonElement deathMessage,
         int x,
         int y,
         int z,
         String dimensionId,
         JsonElement dimensionDisplay,
-        int level) {
+        int level,
+        long day) {
     public SnapshotFields {
         Objects.requireNonNull(owner, "owner");
         Objects.requireNonNull(killer, "killer");
+        Objects.requireNonNull(weapon, "weapon");
         Objects.requireNonNull(deathMessage, "deathMessage");
         Objects.requireNonNull(dimensionId, "dimensionId");
         Objects.requireNonNull(dimensionDisplay, "dimensionDisplay");

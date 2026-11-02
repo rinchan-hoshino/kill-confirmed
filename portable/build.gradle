@@ -1,6 +1,7 @@
 plugins { id 'java-library' }
 
 dependencies {
+    implementation 'com.electronwill.night-config:toml:3.8.3'
     api 'com.google.code.gson:gson:2.10.1'
     testImplementation platform('org.junit:junit-bom:5.11.4')
     testImplementation 'org.junit.jupiter:junit-jupiter'
@@ -12,3 +13,9 @@ tasks.named('test', Test) {
     systemProperty 'killConfirmed.repoRoot', rootProject.projectDir.absolutePath
     description = 'Runs only pure JVM tests; this module has no Minecraft or loader dependencies.'
 }
+
+sourceSets.main.java {
+    srcDir rootProject.file('common/src/main/java')
+    include '**/portable/**', '**/KillConfirmedConfig.java'
+}
+sourceSets.main.resources.srcDir rootProject.file('common/src/main/resources')

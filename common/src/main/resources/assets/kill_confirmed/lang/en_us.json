@@ -8,5 +8,10 @@
   "tooltip.kill_confirmed.dimension": "Dimension: %s",
   "tooltip.kill_confirmed.level": "Experience Level: %s",
   "tooltip.kill_confirmed.level.value": "%s",
-  "disconnect.kill_confirmed.required_client": "Kill Confirmed is required on both the client and server."
+  "disconnect.kill_confirmed.required_client": "Kill Confirmed is required on both the client and server.",
+  "kill_confirmed.tag.name": "%s's Dog Tag",
+  "kill_confirmed.lore.level_day": "Level %s  ·  Day %s",
+  "kill_confirmed.dimension.minecraft.overworld": "Overworld",
+  "kill_confirmed.dimension.minecraft.the_nether": "The Nether",
+  "kill_confirmed.dimension.minecraft.the_end": "The End"
 }

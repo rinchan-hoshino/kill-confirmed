@@ -45,6 +45,8 @@ public final class KillConfirmed implements RinMod {
         if (dogTag != null) throw new IllegalStateException("Kill Confirmed is already initialized");
         dogTag = Objects.requireNonNull(dogTagSupplier, "dogTagSupplier");
         config = KillConfirmedConfig.load(Objects.requireNonNull(configDirectory, "configDirectory"));
+        if (java.nio.file.Files.exists(configDirectory.resolve("kill_confirmed.json")))
+            LOGGER.warn("old config ignored, see kill_confirmed.toml");
         LOGGER.info("Kill Confirmed initialized with drop strategy {}", config.dropStrategy());
     }
 

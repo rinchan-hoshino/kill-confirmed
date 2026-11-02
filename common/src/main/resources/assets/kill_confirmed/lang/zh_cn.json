@@ -8,5 +8,10 @@
   "tooltip.kill_confirmed.dimension": "维度：%s",
   "tooltip.kill_confirmed.level": "经验等级：%s",
   "tooltip.kill_confirmed.level.value": "%s",
-  "disconnect.kill_confirmed.required_client": "客户端与服务端都必须安装 Kill Confirmed。"
+  "disconnect.kill_confirmed.required_client": "客户端与服务端都必须安装 Kill Confirmed。",
+  "kill_confirmed.tag.name": "%s 的狗牌",
+  "kill_confirmed.lore.level_day": "等级 %s  ·  第 %s 天",
+  "kill_confirmed.dimension.minecraft.overworld": "主世界",
+  "kill_confirmed.dimension.minecraft.the_nether": "下界",
+  "kill_confirmed.dimension.minecraft.the_end": "末地"
 }

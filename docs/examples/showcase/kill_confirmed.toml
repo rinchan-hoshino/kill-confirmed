@@ -1,0 +1,15 @@
+# Where the dog tag goes: "death_position" (drops where you died) or "respawn_inventory" (given to you on respawn)
+drop = "death_position"
+# Only create a dog tag when another player is the killer
+player_kills_only = false
+# Optional mcfunction id, run as the dead player at the death position (permission level 2, output silenced) right before the tag is built.
+# Use it to fill scoreboards/storage, then read them in lore with vanilla "score"/"nbt" text components.
+function = "example:dog_tag"
+# One entry per lore line, each a JSON text component. {"placeholder":"<name>"} inserts a value.
+# A line that uses a placeholder with no value (e.g. killer on an environmental death) is hidden.
+lore = [
+  '{"placeholder":"death_message","color":"gray","italic":false}',
+  '{"text":"","color":"gray","italic":false,"extra":[{"placeholder":"x"},{"text":", "},{"placeholder":"y"},{"text":", "},{"placeholder":"z"},{"text":"  "},{"placeholder":"dimension","color":"#808080"}]}',
+  '{"translate":"kill_confirmed.lore.level_day","color":"#808080","italic":false,"with":[{"placeholder":"level","color":"#E2C88C"},{"placeholder":"day","color":"#E2C88C"}]}',
+  '{"text":"Kills: ","color":"#808080","italic":false,"extra":[{"score":{"name":"@s","objective":"kc_kills"},"color":"#E2C88C"}]}',
+]

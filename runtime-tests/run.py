@@ -10,18 +10,18 @@ def run(mc, loader, strategy, output, rinlib, eula, packaged=None, client=False,
     shutil.copyfile(eula,instance/'eula.txt')
     (instance/'server.properties').write_text('server-ip=127.0.0.1\nserver-port=' + str(25960 + ['1.21.1','26.1.2','26.2'].index(mc)*2 + (loader=='neoforge')) + '\nonline-mode=false\nlevel-type=minecraft:flat\ngenerate-structures=false\nview-distance=2\nsimulation-distance=2\nmax-tick-time=0\nspawn-protection=0\n')
     config=instance/'config';config.mkdir(exist_ok=True)
-    lore=json.loads((ROOT/'common/src/main/resources/data/kill_confirmed/lore/default.json').read_text())
-    for key in ['probe:field','probe:java']:
-        lore.append({'when':key,'component':{'placeholder':key}})
-    (config/'kill_confirmed.json').write_text(json.dumps({'drop_strategy':strategy,'lore_template':lore}))
+    # Exercise first-launch generation unless a non-default delivery mode is requested.
+    (config/'kill_confirmed.json').unlink(missing_ok=True)
+    toml=config/'kill_confirmed.toml'
+    toml.unlink(missing_ok=True)
+    if strategy == 'ON_RESPAWN_INVENTORY': toml.write_text('drop = "respawn_inventory"\n')
     pack=instance/'world/datapacks/probe'
+    if pack.exists(): shutil.rmtree(pack)
     (pack/'data/probe/function').mkdir(parents=True,exist_ok=True)
-    (pack/'pack.mcmeta').write_text(json.dumps({'pack':{'description':'Runtime probe','pack_format':48} if mc=='1.21.1' else {'description':'Runtime probe','min_format':[88,0],'max_format':[107,1]}}))
-    (pack/'data/kill_confirmed/tags/function').mkdir(parents=True,exist_ok=True)
-    (pack/'data/kill_confirmed/tags/function/placeholder_providers.json').write_text(json.dumps({'values':['probe:provider']}))
-    (pack/'data/probe/function/provider.mcfunction').write_text('function probe:nested\nexecute if data storage kill_confirmed:probe_checks {invalid:1} run data modify storage kill_confirmed:scratch output append value {id:"probe:bad",component:"INVALID JSON"}\n')
-    (pack/'data/probe/function/nested.mcfunction').write_text("data modify storage kill_confirmed:scratch output append value {id:\"probe:field\",component:'{\"text\":\"nested-function\"}'}\n")
-    (pack/'data/probe/function/death.mcfunction').write_text('kill @s\ndata modify storage kill_confirmed:probe_checks outer_continued set value 1\n')
+    formats=json.loads((ROOT/'profiles.json').read_text())[mc]['pack']
+    (pack/'pack.mcmeta').write_text(json.dumps({'pack':{'description':'Runtime probe',**formats}}))
+    (pack/'data/probe/function/record.mcfunction').write_text('scoreboard players set @s kc_kills 7\ndata modify storage probe:values custom set value "storage-value"\nexecute store result storage probe:values x int 1 run data get entity @s Pos[0]\n')
+    (pack/'data/probe/function/death.mcfunction').write_text('kill @s\ndata modify storage probe:checks outer_continued set value 1\n')
     marker=instance/('client.pass' if client else 'runtime.pass');marker.unlink(missing_ok=True)
     if client: (instance/'options.txt').write_text('onboardAccessibility:false\nlang:en_us\nmaxFps:30\nrenderDistance:2\nsimulationDistance:2\n')
     (instance/'packaged.expected').unlink(missing_ok=True)

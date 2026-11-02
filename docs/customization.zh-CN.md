@@ -1,133 +1,61 @@
-# 自定义狗牌信息
+# 狗牌自定义
 
-[English](customization.md)
+## 配置
 
-本教程适用于 Kill Confirmed 1.1.0。可下载的 Field Notes 数据包面向 Minecraft 1.21.1；在 26.x 使用时，需要将其数据包元信息更新为对应 Minecraft 版本的格式。
+首次启动生成 `config/kill_confirmed.toml`。关闭游戏或服务器后修改，重启生效。多人游戏只读服务端的配置。修改只影响新狗牌，已有狗牌保留生成时的文本。
 
-## 狗牌的交付方式
+```toml
+# Where the dog tag goes: "death_position" (drops where you died) or "respawn_inventory" (given to you on respawn)
+drop = "death_position"
+# Only create a dog tag when another player is the killer
+player_kills_only = false
+# Optional mcfunction id, run as the dead player at the death position (permission level 2, output silenced) right before the tag is built.
+# Use it to fill scoreboards/storage, then read them in lore with vanilla "score"/"nbt" text components.
+function = ""
+# One entry per lore line, each a JSON text component. {"placeholder":"<name>"} inserts a value.
+# A line that uses a placeholder with no value (e.g. killer on an environmental death) is hidden.
+lore = [
+  '{"placeholder":"death_message","color":"gray","italic":false}',
+  '{"text":"","color":"gray","italic":false,"extra":[{"placeholder":"x"},{"text":", "},{"placeholder":"y"},{"text":", "},{"placeholder":"z"},{"text":"  "},{"placeholder":"dimension","color":"#808080"}]}',
+  '{"translate":"kill_confirmed.lore.level_day","color":"#808080","italic":false,"with":[{"placeholder":"level","color":"#E2C88C"},{"placeholder":"day","color":"#E2C88C"}]}',
+]
+```
 
-首次启动游戏或服务器后，会生成 `config/kill_confirmed.json`。关闭游戏或服务器后编辑文件，再重新启动使修改生效。多人游戏修改服务端的文件，单人游戏修改游戏目录中的文件。
+`drop` 可选 `death_position`（默认，死亡原地掉落）和 `respawn_inventory`（复活后放入物品栏）。`player_kills_only = true` 时，只在被另一名玩家杀死时生成狗牌。原地掉落的狗牌遵循普通物品物理规则，可能被岩浆或虚空销毁；需要避开这些风险时可选 `respawn_inventory`。
 
-`drop_strategy` 可选：
+`lore` 中每个字符串是一行原版 JSON 文本组件。`{"placeholder":"name"}` 会递归插入组件，可放在 `extra`、`with` 等位置；占位符对象上的样式覆盖插入值的同名样式。任一占位符缺值时隐藏整行。JSON 或组件解析失败也隐藏该行，并按行号只警告一次。
 
-| 值 | 效果 |
+| 占位符 | 内容 |
 | --- | --- |
-| `AT_DEATH_POSITION` | 在死亡位置掉落，默认值。 |
-| `ON_RESPAWN_INVENTORY` | 重生后放入玩家物品栏；放不下时掉落在重生位置。 |
+| `player` | 死者名 |
+| `killer` | 凶手显示名；没有凶手时缺失 |
+| `weapon` | 凶手主手物品名；空手或没有凶手时缺失 |
+| `death_message` | 保留原样的原版死亡信息组件 |
+| `x`、`y`、`z` | 死亡方块坐标整数 |
+| `dimension` | 本地化维度名，没有翻译时显示维度 ID |
+| `level` | 死亡时经验等级 |
+| `day` | 世界天数：`level.getDayTime() / 24000 + 1` |
 
-配置作用于之后生成的狗牌。已有狗牌保留生成时记录的信息和排版。
+原版 `score`、`nbt`、`selector` 组件以死者身份、死亡位置解析。可选 `function` 在构建狗牌前运行，权限等级为 2，输出静默；由另一个函数触发死亡时也会先执行完。旧 JSON 配置与数据包占位符协议已移除；发现旧配置时启动警告一次，不自动迁移。
 
-## 选择记录的信息
+### 用 function 加自定义行
 
-`lore_template` 是按显示顺序排列的提示文本。每行在 `component` 中填写 Minecraft JSON 文本组件，用仅含 `placeholder` 的节点插入死亡记录：
-
-```json
-{
-  "drop_strategy": "AT_DEATH_POSITION",
-  "lore_template": [
-    {
-      "component": {
-        "text": "玩家：",
-        "color": "gold",
-        "italic": false,
-        "extra": [{"placeholder": "kill_confirmed:owner"}]
-      }
-    },
-    {
-      "when": "kill_confirmed:killer",
-      "component": {
-        "text": "击杀者：",
-        "color": "red",
-        "italic": false,
-        "extra": [{"placeholder": "kill_confirmed:killer"}]
-      }
-    }
-  ]
-}
-```
-
-狗牌名称本身已包含所属玩家，可以按需再添加玩家信息行。
-
-| 占位符 | 信息 |
-| --- | --- |
-| `kill_confirmed:owner` | 死亡玩家的显示名称 |
-| `kill_confirmed:killer` | 击杀者的显示名称，有击杀者时可用 |
-| `kill_confirmed:death_message` | 游戏的死亡消息 |
-| `kill_confirmed:coordinates` | 死亡坐标 |
-| `kill_confirmed:dimension` | 维度显示名称 |
-| `kill_confirmed:dimension_id` | 维度 ID，例如 `minecraft:overworld` |
-| `kill_confirmed:level` | 死亡时的经验等级 |
-
-`when` 指定某个占位符存在时才显示整行。击杀者等可选信息应使用它，例如环境导致的死亡可能没有击杀者。没有条件保护的占位符缺失时，会产生模板错误。
-
-## 颜色、排版与本地化
-
-可使用文本组件的 `color`、`bold`、`italic`、`underlined`、`extra`、`translate` 等字段，颜色也支持 `#64D8DD` 这样的十六进制写法。空行可写成 `{"component":{"text":""}}`。
-
-占位符节点本身只写 `{"placeholder":"命名空间:键"}`，样式放在外层组件中：
+以 Minecraft 1.21.1 为例，新建 `world/datapacks/tag_stats/pack.mcmeta`：
 
 ```json
-{
-  "component": {
-    "text": "等级  ",
-    "color": "gray",
-    "italic": false,
-    "extra": [
-      {
-        "text": "",
-        "color": "#F5D282",
-        "bold": true,
-        "extra": [{"placeholder": "kill_confirmed:level"}]
-      }
-    ]
-  }
-}
+{"pack":{"pack_format":34,"description":"Dog tag statistics"}}
 ```
 
-内建信息保留原有文本组件，包括样式和翻译键。[默认配置](examples/default/kill_confirmed.json)的标签使用翻译键；自定义模板中直接填写的文字会原样显示。
-
-## 复现截图中的复杂展示
-
-1. 关闭游戏或服务器，备份现有配置。
-2. 用 [Field Notes 示例配置](examples/showcase/kill_confirmed.json)替换 `config/kill_confirmed.json`。
-3. 下载 [field-notes.zip](examples/showcase/field-notes.zip?raw=true)，保持 ZIP 格式，放入世界的 `datapacks` 目录。
-4. 重新启动，通过正常游戏中的死亡生成一枚新的狗牌。
-
-示例组合了渐变标题、分区排版、条件显示和死亡记录。配套数据包提供了装饰性称号 **Pathfinder** 与章节 **CH. 07 / The long way home**，可以在[对应函数](examples/showcase/field-notes/data/showcase/function/tag_details.mcfunction)中换成自己世界的文字。
-
-![使用 Field Notes 配置的狗牌](images/custom-dog-tag.png)
-
-恢复默认布局时，换回[默认配置](examples/default/kill_confirmed.json)并重新启动即可。
-
-## 用数据包增加信息
-
-在 `data/kill_confirmed/tags/function/placeholder_providers.json` 中注册函数：
-
-```json
-{"values":["example:tag_details"]}
-```
-
-创建 `data/example/function/tag_details.mcfunction`：
+新建 `world/datapacks/tag_stats/data/example/function/dog_tag.mcfunction`：
 
 ```mcfunction
-data modify storage kill_confirmed:scratch output append value {id:"example:rank",component:'{"text":"探路者","color":"aqua"}'}
+scoreboard players set @s kc_kills 7
 ```
 
-然后在 `lore_template` 中引用它：
+先执行一次 `/scoreboard objectives add kc_kills dummy`，再执行 `/reload`。将 TOML 中的 `function` 改为 `"example:dog_tag"`，并在 `lore` 数组中追加：
 
-```json
-{
-  "when": "example:rank",
-  "component": {
-    "text": "称号：",
-    "italic": false,
-    "extra": [{"placeholder": "example:rank"}]
-  }
-}
+```toml
+  '{"text":"击杀数：","color":"#808080","italic":false,"extra":[{"score":{"name":"@s","objective":"kc_kills"},"color":"#E2C88C"}]}'
 ```
 
-每个函数以死亡玩家的身份执行，可以从 `storage kill_confirmed:scratch input` 读取死亡快照，并向 `output` 追加结果。自定义键使用自己的命名空间；`kill_confirmed` 保留给内建字段。输出中的 `component` 是 JSON 文本组件字符串。
-
-狗牌会等待提供信息的函数执行完毕后再生成，包括在其他命令函数中触发死亡的情况。提供信息的函数也可以调用嵌套函数来补充字段。
-
-完整的快照结构、输出限制和 Java 扩展方式见 [Integration reference](integration.md)。
+重启后，新狗牌多一行「击杀数：7」。函数中的 `7` 可以替换成你需要的计算。26.x 使用对应 Minecraft 版本的数据包格式，见 `profiles.json`。仓库附有[完整配置与数据包](examples/showcase/)。

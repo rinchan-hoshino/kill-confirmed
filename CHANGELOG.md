@@ -1,8 +1,12 @@
 # Changelog
 
-## 未发布
+## 1.2.0
 
-- 内置 RinLib 2.0，玩家无需另装；玩家存档和加载器事件统一由 RinLib 处理，保留旧狗牌存档和客户端协议。
+- Use a single commented `config/kill_confirmed.toml` for delivery, player-only kills, an optional function and lore. Old JSON is ignored with a startup warning; no migration is performed.
+- Replace the datapack function-tag/scratch-storage protocol and `when` conditions with an optional function and vanilla score, NBT and selector text components resolved as the deceased player.
+- Give new tags a gold, non-italic localized name and three restrained lore lines: vanilla death message, coordinates/dimension, and level/day.
+- Add `day` and `weapon` placeholders, plus short built-in names and individual coordinates. Hide a whole line when a value is absent or parsing fails; warn once per invalid line.
+- Bundle RinLib 2.0; retain existing snapshots, pending-player saves, client protocol and right-click behavior.
 
 ## 1.1.0
 

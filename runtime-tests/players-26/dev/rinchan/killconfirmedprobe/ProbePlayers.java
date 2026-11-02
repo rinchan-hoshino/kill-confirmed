@@ -28,4 +28,6 @@ public final class ProbePlayers {
         player.saveWithoutId(output);
         return output.buildResult(); }
     public static void load(ServerPlayer player, CompoundTag tag) { player.load(TagValueInput.create(ProblemReporter.DISCARDING, player.registryAccess(), tag)); }
+    public static void kill(ServerPlayer player, net.minecraft.world.damagesource.DamageSource source) { player.hurtServer(player.level(), source, 1000); }
+
 }
