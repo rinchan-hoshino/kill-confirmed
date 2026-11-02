@@ -266,6 +266,8 @@ public final class RuntimeProbe {
                 "{\"placeholder\":\"probe:java\",\"italic\":false}"));
         server.getCommands().performPrefixedCommand(server.createCommandSourceStack(), "scoreboard objectives add kc_kills dummy");
         config(new KillConfirmedConfig(DropStrategy.AT_DEATH_POSITION, false, "probe:record", lore));
+        // Since 26.1, vanilla pretty-prints non-interpreted NBT strings with quotes.
+        var storageValue = server.getServerVersion().startsWith("26.") ? "\"storage-value\"" : "storage-value";
         for (boolean commanded : List.of(false, true)) {
             clear(server);
             var player = player(server, "CustomProbe");
@@ -281,8 +283,8 @@ public final class RuntimeProbe {
             var lines = stack.get(DataComponents.LORE).lines();
             var text = lines.stream().map(Component::getString).toList();
             System.out.println("KC_CUSTOM_LORE " + text);
-            check(text.equals(commanded ? List.of("7", "storage-value", "CustomProbe", "java-provider")
-                    : List.of("7", "storage-value", "CustomProbe", "Probe Sword", "WeaponProbe", "java-provider")), "function values, score/NBT/selector, optional fields and Java providers resolve during " + (commanded ? "function" : "player") + " death");
+            check(text.equals(commanded ? List.of("7", storageValue, "CustomProbe", "java-provider")
+                    : List.of("7", storageValue, "CustomProbe", "Probe Sword", "WeaponProbe", "java-provider")), "function values, score/NBT/selector, optional fields and Java providers resolve during " + (commanded ? "function" : "player") + " death");
             check(server.getCommandStorage().get(ResourceLocation.parse("probe:values")).toString().contains("x:0"), "callback runs at the deceased player's position");
             check(!commanded || lines.stream().noneMatch(line -> line.getString().equals("Probe Sword")), "unavailable weapon hides its whole line");
             if (!commanded) check(lines.get(3).getStyle().getColor().getValue() == 0xE2C88C && !lines.get(3).getStyle().isItalic(), "placeholder color and italic styles survive vanilla decoding");
