@@ -1,5 +1,9 @@
 # Changelog
 
+## 未发布
+
+- 迁到 RinLib 2.0，内置 RinLib，无需另装。
+
 ## 1.1.0
 
 - Fix dog tag registration on Minecraft 26.x, which requires an item registry ID before construction.

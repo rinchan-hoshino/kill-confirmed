@@ -22,8 +22,16 @@ dependencies {
     mappings loom.officialMojangMappings()
     modImplementation "net.fabricmc:fabric-loader:${root.property('fabric_loader_version')}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${root.property('fabric_api_version')}"
-    if (root.hasProperty('rinlibJar')) modImplementation files(root.property('rinlibJar'))
-    else modImplementation "maven.modrinth:rinlib:${root.property('rinlib_version')}+${root.property('minecraft_version')}-fabric"
+    def rinlib = "maven.modrinth:rinlib:${root.property('rinlib_version')}+${root.property('minecraft_version')}-fabric"
+    if (root.hasProperty('rinlibJar')) {
+        def localJar = file(root.property('rinlibJar'))
+        repositories { flatDir { dirs localJar.parentFile } }
+        rinlib = dependencies.create("dev.rinchan:rinlib-fabric:${root.property('rinlib_version')}+${root.property('minecraft_version')}") {
+            artifact { name = localJar.name - '.jar'; type = 'jar'; extension = 'jar' }
+        }
+    }
+    modImplementation rinlib
+    include rinlib
 }
 
 def resourceProperties = [

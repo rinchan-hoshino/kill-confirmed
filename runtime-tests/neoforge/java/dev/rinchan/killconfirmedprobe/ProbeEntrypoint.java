@@ -5,6 +5,12 @@ import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 @Mod("kill_confirmed_probe")
 public final class ProbeEntrypoint {
+    public static boolean bundledLibrary() {
+        var mods = net.neoforged.fml.ModList.get();
+        var library = mods.getModFileById("rinlib").getFile();
+        return library.getDiscoveryAttributes().parent()
+                == mods.getModFileById("kill_confirmed").getFile();
+    }
     private int ticks;
     public ProbeEntrypoint() {
         NeoForge.EVENT_BUS.addListener((ServerStartedEvent event) -> event.getServer().overworld().setChunkForced(0, 0, true));

@@ -21,7 +21,7 @@ See the [dog tag customization guide](https://github.com/rinchan-hoshino/kill-co
 
 ## Requirements
 
-- [RinLib](https://modrinth.com/mod/rinlib)
+RinLib is bundled; no separate installation is required.
 
 ## Screenshots
 

@@ -23,11 +23,11 @@ python3 scripts/build-matrix.py
 python3 scripts/build-matrix.py --minecraft 26.2 --loader neoforge
 ```
 
-Release artifacts and their hashes are written to `build/matrix/`. The wrapper isolates Gradle state for each target. Set `JAVA_21_HOME` and `JAVA_25_HOME` to select installed JDKs. A local RinLib release matrix can be supplied with `--rinlib-dir=/absolute/path/to/rinlib/build/matrix`. The metadata still requires RinLib 1.1.0 or newer.
+Release artifacts and their hashes are written to `build/matrix/`. The wrapper isolates Gradle state for each target. Set `JAVA_21_HOME` and `JAVA_25_HOME` to select installed JDKs. A local RinLib release matrix can be supplied with `--rinlib-dir=/absolute/path/to/rinlib/build/matrix`. RinLib 2.0 is bundled in every artifact; the dependency metadata is satisfied by that nested jar.
 
 ## Runtime regression suite
 
-`runtime-tests/run.py` launches an isolated dedicated server with the real loader events. It requires an existing accepted `eula.txt` and a matching RinLib jar:
+`runtime-tests/run.py` launches an isolated dedicated server with the real loader events. It requires an existing accepted `eula.txt` and a matching RinLib jar for compilation:
 
 ```sh
 python3 runtime-tests/run.py --minecraft 1.21.1 --loader fabric \
@@ -39,4 +39,4 @@ Run both `AT_DEATH_POSITION` and `ON_RESPAWN_INVENTORY` for every target. The su
 
 The test mod is a separate source set and is never included in a release jar.
 
-Add `--packaged=/absolute/path/to/kill_confirmed.jar` to test the release artifact instead of development classes. Add `--client` for client startup and item resource checks. Client startup checks do not replace the server behavior suite.
+Add `--packaged=/absolute/path/to/kill_confirmed.jar` to test the release artifact instead of development classes, using its bundled RinLib at runtime. Fabric dedicated-server checks also need `--server-dir=/absolute/path/to/installed-fabric-server`, including the matching Fabric API jar in its `mods` directory. The runner builds a separate remapped probe and copies only that probe, the release jar and Fabric API into the isolated server; no separate RinLib is loaded. NeoForge verifies that RinLib was discovered inside the release jar. Add `--client` for client startup and item resource checks. Client startup checks do not replace the server behavior suite.

@@ -21,7 +21,7 @@ Kill Confirmed 会在玩家死亡时生成一枚狗牌，可用于记录或纪�
 
 ## 安装要求
 
-- [RinLib](https://modrinth.com/mod/rinlib)
+已内置 RinLib，无需另装。
 
 ## 截图
 

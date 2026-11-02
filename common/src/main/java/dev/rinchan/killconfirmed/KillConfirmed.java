@@ -1,7 +1,7 @@
 package dev.rinchan.killconfirmed;
 
 import java.nio.file.Path;
-import dev.rinchan.rinlib.minecraft.ItemProperties;
+import dev.rinchan.rinlib.api.ItemProperties;
 import net.minecraft.world.item.Rarity;
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -22,7 +22,7 @@ public final class KillConfirmed {
     private KillConfirmed() {}
 
     public static Item createDogTag() {
-        return new Item(ItemProperties.of(DOG_TAG_ID).stacksTo(1).rarity(Rarity.RARE));
+        return new Item(ItemProperties.of(DOG_TAG_ID.toString()).stacksTo(1).rarity(Rarity.RARE));
     }
 
     public static synchronized void initialize(Supplier<Item> dogTagSupplier, Path configDirectory) {

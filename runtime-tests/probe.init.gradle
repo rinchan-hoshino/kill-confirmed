@@ -51,9 +51,19 @@ allprojects {
                 programArgument '--nogui'
             }
         }
-        p.tasks.register('runtimeProbeJar', Jar) {
+        def probeJar = p.tasks.register('runtimeProbeJar', Jar) {
             archiveBaseName = 'kill_confirmed-runtime-probe'
             from probe.output
+        }
+        if (p.modLoader == 'fabric' && !p.minecraft.startsWith('26.')) {
+            def remapType = p.tasks.named('remapJar').get().getClass().getSuperclass()
+            p.tasks.register('remapRuntimeProbeJar', remapType) {
+                inputFile.set(probeJar.flatMap { it.archiveFile })
+                archiveBaseName = 'kill_confirmed-runtime-probe'
+                archiveClassifier = 'remapped'
+                classpath.from(probe.compileClasspath)
+                addNestedDependencies = false
+            }
         }
     }
 }

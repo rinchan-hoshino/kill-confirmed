@@ -33,8 +33,17 @@ sourceSets.main.resources.srcDir tasks.register('generateModMetadata', ProcessRe
 }
 
 dependencies {
-    if (rootProject.hasProperty('rinlibNeoJar')) implementation files(rootProject.property('rinlibNeoJar'))
-    else implementation "maven.modrinth:rinlib:${rootProject.rinlib_version}+${rootProject.minecraft_version}-neoforge"
+    def rinlib = "maven.modrinth:rinlib:${rootProject.rinlib_version}+${rootProject.minecraft_version}-neoforge"
+    if (rootProject.hasProperty('rinlibNeoJar')) {
+        def localJar = file(rootProject.property('rinlibNeoJar'))
+        // jarJar requires module coordinates for local jars without Automatic-Module-Name.
+        repositories { flatDir { dirs localJar.parentFile } }
+        rinlib = dependencies.create("dev.rinchan:rinlib-neoforge:${rootProject.rinlib_version}+${rootProject.minecraft_version}") {
+            artifact { name = localJar.name - '.jar'; type = 'jar'; extension = 'jar' }
+        }
+    }
+    implementation rinlib
+    jarJar rinlib
 }
 
 neoForge {

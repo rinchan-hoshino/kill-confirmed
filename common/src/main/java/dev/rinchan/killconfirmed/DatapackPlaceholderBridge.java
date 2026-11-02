@@ -6,12 +6,12 @@ import dev.rinchan.killconfirmed.api.DogTagSnapshot;
 import dev.rinchan.killconfirmed.portable.FunctionOutput;
 import dev.rinchan.killconfirmed.portable.FunctionOutputParser;
 import dev.rinchan.killconfirmed.portable.PlaceholderKey;
-import dev.rinchan.rinlib.state.ReentrantFlag;
+import dev.rinchan.killconfirmed.portable.ReentrantFlag;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import dev.rinchan.rinlib.minecraft.FunctionExecution;
-import dev.rinchan.rinlib.minecraft.MinecraftData;
-import dev.rinchan.rinlib.minecraft.PlayerContext;
+import dev.rinchan.rinlib.api.FunctionExecution;
+import dev.rinchan.rinlib.api.MinecraftData;
+import dev.rinchan.rinlib.api.PlayerContext;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.nbt.IntArrayTag;
 import net.minecraft.nbt.NbtOps;
@@ -49,13 +49,7 @@ final class DatapackPlaceholderBridge {
             scratch.put("output", new ListTag());
             storage.set(SCRATCH_STORAGE, scratch);
 
-            FunctionExecution.isolated(server, () -> {
-                var source = PlayerContext.functionSource(player);
-                for (var function : server.getFunctions().getTag(CALLBACK_TAG)) {
-                    server.getFunctions().execute(function, source);
-                }
-                return null;
-            });
+            FunctionExecution.executeTag(player, CALLBACK_TAG.toString());
 
             var outputs = OUTPUT.listOf().fieldOf("output").codec()
                     .parse(NbtOps.INSTANCE, storage.get(SCRATCH_STORAGE)).getOrThrow();

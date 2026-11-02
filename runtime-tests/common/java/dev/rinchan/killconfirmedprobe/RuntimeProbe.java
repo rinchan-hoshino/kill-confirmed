@@ -3,9 +3,9 @@ import dev.rinchan.killconfirmed.*;
 
 import dev.rinchan.killconfirmed.api.KillConfirmedApi;
 import dev.rinchan.killconfirmed.portable.DropStrategy;
-import dev.rinchan.rinlib.minecraft.FunctionExecution;
-import dev.rinchan.rinlib.minecraft.MinecraftData;
-import dev.rinchan.rinlib.minecraft.PlayerContext;
+import dev.rinchan.rinlib.api.FunctionExecution;
+import dev.rinchan.rinlib.api.MinecraftData;
+import dev.rinchan.rinlib.api.PlayerContext;
 import dev.rinchan.rinlib.mixin.command.CommandContextAccessor;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -43,6 +43,7 @@ public final class RuntimeProbe {
             KillConfirmedApi.registerPlaceholder(ResourceLocation.parse("probe:java"), context -> Optional.of(Component.literal("java-provider")));
             if (Files.exists(Path.of("packaged.expected"))) {
                 check(KillConfirmed.class.getResource("KillConfirmed.class").toString().contains(".jar"), "release jar supplies the loaded mod classes");
+                check(ProbeEntrypoint.bundledLibrary(), "RinLib loads from the nested dog tag jar");
             }
             server.getCommandStorage().set(KillConfirmed.id("probe_checks"), new CompoundTag());
             contextRestoration(server);

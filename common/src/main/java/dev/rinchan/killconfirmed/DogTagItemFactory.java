@@ -2,7 +2,7 @@ package dev.rinchan.killconfirmed;
 
 import dev.rinchan.killconfirmed.api.DogTagSnapshot;
 import dev.rinchan.killconfirmed.api.PlaceholderContext;
-import dev.rinchan.rinlib.minecraft.MinecraftData;
+import dev.rinchan.rinlib.api.MinecraftData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
