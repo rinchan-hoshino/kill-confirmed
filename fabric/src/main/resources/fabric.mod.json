@@ -8,8 +8,7 @@
   "license": "${mod_license}",
   "environment": "*",
   "entrypoints": {
-    "main": ["dev.rinchan.killconfirmed.fabric.KillConfirmedFabric"],
-    "client": ["dev.rinchan.killconfirmed.fabric.KillConfirmedFabricClient"]
+    "main": ["dev.rinchan.killconfirmed.fabric.KillConfirmedFabric"]
   },
   "mixins": ["kill_confirmed.mixins.json"],
   "depends": {

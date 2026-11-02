@@ -33,7 +33,6 @@ def generatedJava = tasks.register('prepareJava', Sync) {
     from new File(sourceRoot, 'common/src/main/java')
     from new File(sourceRoot, 'portable/src/main/java')
     from new File(sourceRoot, "${modLoader}/src/main/java")
-    from new File(sourceRoot, "adapters/${target.adapter}")
     include '**/*.java'
     into layout.buildDirectory.dir('generated/java')
     if (target.adapter == '26') {

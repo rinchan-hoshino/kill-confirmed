@@ -3,6 +3,7 @@ import dev.rinchan.killconfirmed.*;
 
 import dev.rinchan.killconfirmed.api.KillConfirmedApi;
 import dev.rinchan.killconfirmed.portable.DropStrategy;
+import dev.rinchan.rinlib.v2.PlayerData;
 import dev.rinchan.rinlib.api.FunctionExecution;
 import dev.rinchan.rinlib.api.MinecraftData;
 import dev.rinchan.rinlib.api.PlayerContext;
@@ -30,6 +31,7 @@ import net.minecraft.world.phys.AABB;
 
 /** Exercises the actual loader events and Minecraft serialization in a disposable server. */
 public final class RuntimeProbe {
+    private static final PlayerData.Slot PENDING = PlayerData.slot("KillConfirmedPendingDogTag");
     private static int assertions;
     private static long nextId = 700;
     private static void check(boolean condition, String name) {
@@ -46,6 +48,9 @@ public final class RuntimeProbe {
                 check(ProbeEntrypoint.bundledLibrary(), "RinLib loads from the nested dog tag jar");
             }
             server.getCommandStorage().set(KillConfirmed.id("probe_checks"), new CompoundTag());
+            check(dev.rinchan.rinlib.v2.net.PresencePayload.type(KillConfirmed.MOD_ID, KillConfirmed.NETWORK_VERSION)
+                    .id().equals(KillConfirmed.id("presence_v1")), "client presence payload retains the released protocol ID");
+            legacyPendingData(server);
             contextRestoration(server);
             try (var input = RuntimeProbe.class.getResourceAsStream("/legacy-snapshot-1.0.1.snbt")) {
                 var legacy = net.minecraft.nbt.TagParser.parseTag(new String(input.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8));
@@ -62,6 +67,35 @@ public final class RuntimeProbe {
         } finally {
             server.halt(false);
         }
+    }
+
+    private static Optional<CompoundTag> takePending(ServerPlayer player) {
+        var value = PENDING.get(player);
+        PENDING.set(player, null);
+        return value;
+    }
+
+    private static void legacyPendingData(MinecraftServer server) {
+        var player = ProbePlayers.create(server, "LegacyPendingProbe", ++nextId);
+        var expected = new CompoundTag();
+        expected.putString("id", "kill_confirmed:dog_tag");
+        expected.putInt("count", 1);
+        var root = new CompoundTag();
+        root.put("KillConfirmedPendingDogTag", expected.copy());
+        ProbePlayers.load(player, root);
+        check(PENDING.get(player).orElseThrow().equals(expected), "legacy root pending tag is readable through PlayerData slot");
+        root.remove("KillConfirmedPendingDogTag");
+        check(PENDING.get(player).orElseThrow().equals(expected), "loaded pending data is independent of the old root");
+        var copy = PENDING.get(player).orElseThrow();
+        copy.putString("id", "minecraft:stone");
+        check(PENDING.get(player).orElseThrow().equals(expected), "slot reads return private copies");
+        PENDING.set(player, expected);
+        expected.putString("id", "minecraft:dirt");
+        check(PENDING.get(player).orElseThrow().toString().contains("kill_confirmed:dog_tag"), "slot writes retain a copy");
+        var saved = ProbePlayers.save(player);
+        check(saved.get("KillConfirmedPendingDogTag").equals(PENDING.get(player).orElseThrow()), "slot saves directly at the legacy root key");
+        PENDING.set(player, null);
+        check(PENDING.get(player).isEmpty() && !ProbePlayers.save(player).contains("KillConfirmedPendingDogTag"), "clearing a slot removes its saved root key");
     }
 
     private static void contextRestoration(MinecraftServer server) {
@@ -111,23 +145,21 @@ public final class RuntimeProbe {
         boolean pendingMode = KillConfirmed.config().dropStrategy() == DropStrategy.ON_RESPAWN_INVENTORY;
         ItemStack stack;
         if (pendingMode) {
-            var carrier = (PendingDogTagCarrier) player;
-            check(carrier.killConfirmed$hasPendingDogTag(), "real death event stores pending dog tag");
+            check(PENDING.get(player).isPresent(), "real death event stores pending dog tag");
             check(drops(server).isEmpty(), "respawn mode does not also drop a dog tag");
             DogTagLifecycle.onDeath(player, player.damageSources().generic());
-            check(carrier.killConfirmed$hasPendingDogTag(), "a repeated death callback cannot replace the pending dog tag");
+            check(PENDING.get(player).isPresent(), "a repeated death callback cannot replace the pending dog tag");
             var saved = ProbePlayers.save(player);
             NbtIo.writeCompressed(saved, Path.of("pending-player.dat"));
             var restored = ProbePlayers.create(server, "RestoredProbe", ++nextId);
             ProbePlayers.load(restored, NbtIo.readCompressed(Path.of("pending-player.dat"), NbtAccounter.unlimitedHeap()));
-            var restoredCarrier = (PendingDogTagCarrier) restored;
-            check(restoredCarrier.killConfirmed$hasPendingDogTag(), "pending state survives player disk serialization");
-            check(MinecraftData.of(server.registryAccess()).loadItem(restoredCarrier.killConfirmed$takePendingDogTag().orElseThrow()).isPresent(),
+            check(PENDING.get(restored).isPresent(), "pending state survives player disk serialization");
+            check(MinecraftData.of(server.registryAccess()).loadItem(takePending(restored).orElseThrow()).isPresent(),
                     "saved pending item decodes with Minecraft registries");
-            check(!restoredCarrier.killConfirmed$hasPendingDogTag(), "taking pending state clears it");
+            check(!PENDING.get(restored).isPresent(), "taking pending state clears it");
             var replacement = server.getPlayerList().respawn(player, false, Entity.RemovalReason.KILLED);
-            check(!carrier.killConfirmed$hasPendingDogTag(), "real respawn event transfers pending state from old player");
-            check(!((PendingDogTagCarrier) replacement).killConfirmed$hasPendingDogTag(), "real respawn event consumes pending state");
+            check(!PENDING.get(player).isPresent(), "real respawn event transfers pending state from old player");
+            check(!PENDING.get(replacement).isPresent(), "real respawn event consumes pending state");
             stack = inventoryDogTag(replacement);
             check(!stack.isEmpty(), "real respawn event delivers the dog tag to inventory");
             DogTagLifecycle.onRespawn(replacement);
@@ -135,17 +167,17 @@ public final class RuntimeProbe {
             var serialized = MinecraftData.of(server.registryAccess()).saveItem(stack);
             replacement.getInventory().clearContent();
             for (int slot = 0; slot < 36; slot++) replacement.getInventory().setItem(slot, new ItemStack(Items.STONE, 64));
-            ((PendingDogTagCarrier) replacement).killConfirmed$setPendingDogTag(serialized);
+            PENDING.set(replacement, serialized);
             DogTagLifecycle.onRespawn(replacement);
             check(drops(server).size() == 1, "full inventory drops exactly one dog tag");
-            check(!((PendingDogTagCarrier) replacement).killConfirmed$hasPendingDogTag(), "overflow delivery clears pending state");
+            check(!PENDING.get(replacement).isPresent(), "overflow delivery clears pending state");
             drops(server).forEach(Entity::discard);
             server.getPlayerList().remove(replacement);
         } else {
             check(drops(server).size() == 1, "real death event drops exactly one dog tag");
             var drop = drops(server).getFirst();
             check(drop.position().distanceTo(player.position()) < 0.001, "dog tag drops at the exact death position");
-            check(!((PendingDogTagCarrier) player).killConfirmed$hasPendingDogTag(), "drop mode leaves no pending state");
+            check(!PENDING.get(player).isPresent(), "drop mode leaves no pending state");
             stack = drop.getItem().copy();
             drop.discard();
             player.discard();
@@ -189,9 +221,8 @@ public final class RuntimeProbe {
         server.getCommands().performPrefixedCommand(server.createCommandSourceStack(), "data modify storage kill_confirmed:probe_checks invalid set value 1");
         var player = player(server, "InvalidProbe");
         DogTagLifecycle.onDeath(player, player.damageSources().generic());
-        var carrier = (PendingDogTagCarrier) player;
-        var first = carrier.killConfirmed$hasPendingDogTag()
-                ? MinecraftData.of(server.registryAccess()).loadItem(carrier.killConfirmed$takePendingDogTag().orElseThrow()).orElseThrow()
+        var first = PENDING.get(player).isPresent()
+                ? MinecraftData.of(server.registryAccess()).loadItem(takePending(player).orElseThrow()).orElseThrow()
                 : drops(server).getFirst().getItem();
         check(first.get(DataComponents.LORE).lines().stream().noneMatch(line -> line.getString().equals("nested-function")),
                 "malformed datapack output is rejected as a whole");
@@ -199,8 +230,8 @@ public final class RuntimeProbe {
         check(server.getCommandStorage().get(KillConfirmed.id("scratch")).isEmpty(), "failed callback clears scratch storage");
         server.getCommands().performPrefixedCommand(server.createCommandSourceStack(), "data remove storage kill_confirmed:probe_checks invalid");
         DogTagLifecycle.onDeath(player, player.damageSources().generic());
-        var second = carrier.killConfirmed$hasPendingDogTag()
-                ? MinecraftData.of(server.registryAccess()).loadItem(carrier.killConfirmed$takePendingDogTag().orElseThrow()).orElseThrow()
+        var second = PENDING.get(player).isPresent()
+                ? MinecraftData.of(server.registryAccess()).loadItem(takePending(player).orElseThrow()).orElseThrow()
                 : drops(server).getFirst().getItem();
         check(second.get(DataComponents.LORE).lines().stream().anyMatch(line -> line.getString().equals("nested-function")),
                 "callbacks recover after invalid output");

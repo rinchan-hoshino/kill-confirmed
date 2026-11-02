@@ -8,8 +8,7 @@ base { archivesName = "${rootProject.mod_id}-neoforge" }
 
 sourceSets.main.java.srcDirs += [
         rootProject.file('common/src/main/java'),
-        rootProject.file('portable/src/main/java'),
-        rootProject.file('adapters/1.21')
+        rootProject.file('portable/src/main/java')
 ]
 sourceSets.main.resources.srcDir rootProject.file('common/src/main/resources')
 sourceSets.main.resources.srcDir tasks.register('generateModMetadata', ProcessResources) {

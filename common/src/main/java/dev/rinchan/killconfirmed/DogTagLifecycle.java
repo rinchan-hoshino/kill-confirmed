@@ -20,8 +20,7 @@ public final class DogTagLifecycle {
     private DogTagLifecycle() {}
 
     public static void onDeath(ServerPlayer player, DamageSource source) {
-        PendingDogTagCarrier carrier = carrier(player);
-        if (carrier.killConfirmed$hasPendingDogTag()) {
+        if (KillConfirmed.PENDING_DOG_TAG.get(player).isPresent()) {
             KillConfirmed.LOGGER.error("Refused to create a second pending dog tag for {}", PlayerContext.name(player));
             return;
         }
@@ -31,17 +30,17 @@ public final class DogTagLifecycle {
         if (KillConfirmed.config().dropStrategy() == DropStrategy.AT_DEATH_POSITION) {
             dropExactlyHere(player, stack, "death");
         } else {
-            carrier.killConfirmed$setPendingDogTag(MinecraftData.of(player.registryAccess()).saveItem(stack));
+            setPending(player, MinecraftData.of(player.registryAccess()).saveItem(stack));
         }
     }
 
     public static void copyPending(ServerPlayer original, ServerPlayer replacement) {
-        carrier(original).killConfirmed$takePendingDogTag()
-                .ifPresent(tag -> carrier(replacement).killConfirmed$setPendingDogTag(tag));
+        takePending(original)
+                .ifPresent(tag -> setPending(replacement, tag));
     }
 
     public static void onRespawn(ServerPlayer player) {
-        Optional<CompoundTag> pending = carrier(player).killConfirmed$takePendingDogTag();
+        Optional<CompoundTag> pending = takePending(player);
         if (pending.isEmpty()) return;
 
         Optional<ItemStack> decoded = MinecraftData.of(player.registryAccess()).loadItem(pending.get());
@@ -79,8 +78,16 @@ public final class DogTagLifecycle {
                 Math.max(0, player.experienceLevel));
     }
 
-    private static PendingDogTagCarrier carrier(ServerPlayer player) {
-        return (PendingDogTagCarrier) player;
+    private static void setPending(ServerPlayer player, CompoundTag tag) {
+        if (KillConfirmed.PENDING_DOG_TAG.get(player).isPresent())
+            throw new IllegalStateException("A dog tag is already pending");
+        KillConfirmed.PENDING_DOG_TAG.set(player, tag);
+    }
+
+    private static Optional<CompoundTag> takePending(ServerPlayer player) {
+        var pending = KillConfirmed.PENDING_DOG_TAG.get(player);
+        KillConfirmed.PENDING_DOG_TAG.set(player, null);
+        return pending;
     }
 
     private static void dropExactlyHere(ServerPlayer player, ItemStack stack, String phase) {

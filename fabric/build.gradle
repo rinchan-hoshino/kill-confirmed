@@ -11,8 +11,7 @@ base { archivesName = "${modId}-fabric" }
 
 sourceSets.main.java.srcDirs += [
         root.file('common/src/main/java'),
-        root.file('portable/src/main/java'),
-        root.file('adapters/1.21')
+        root.file('portable/src/main/java')
 ]
 sourceSets.main.resources.srcDir root.file('common/src/main/resources')
 
