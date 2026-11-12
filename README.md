@@ -4,20 +4,25 @@
 
 Kill Confirmed creates a dog tag when a player dies, for records or keepsakes.
 
+![Dog tag with the default information](docs/images/default-dog-tag.png)
+
+![Dog tag with a custom layout and extra information](docs/images/custom-dog-tag.png)
+
+## How it works
+
+- Every real player death creates one dog tag with the player's name, the cause of death, the position and dimension, and the experience level.
+- By default the tag drops where you died. Set `drop = "respawn_inventory"` to receive it on respawn instead.
+- Each line of the tag's lore is a JSON text component. A line whose value is missing is hidden.
+- Tags already created keep their text when the config changes.
+
 ## Configuration
 
-First launch creates `config/kill_confirmed.toml`. Edit it with the game/server stopped, then restart. On a server, only the server's configuration is used. Changes affect new tags; existing tags keep their recorded text.
+The file is `config/kill_confirmed.toml`, created on first launch. Edit it with the game or server stopped, then restart. On a server only the server's file is used.
 
 ```toml
-# Where the dog tag goes: "death_position" (drops where you died) or "respawn_inventory" (given to you on respawn)
 drop = "death_position"
-# Only create a dog tag when another player is the killer
 player_kills_only = false
-# Optional mcfunction id, run as the dead player at the death position (permission level 2, output silenced) right before the tag is built.
-# Use it to fill scoreboards/storage, then read them in lore with vanilla "score"/"nbt" text components.
 function = ""
-# One entry per lore line, each a JSON text component. {"placeholder":"<name>"} inserts a value.
-# A line that uses a placeholder with no value (e.g. killer on an environmental death) is hidden.
 lore = [
   '{"placeholder":"death_message","color":"gray","italic":false}',
   '{"text":"","color":"gray","italic":false,"extra":[{"placeholder":"x"},{"text":", "},{"placeholder":"y"},{"text":", "},{"placeholder":"z"},{"text":"  "},{"placeholder":"dimension","color":"#808080"}]}',
@@ -25,55 +30,31 @@ lore = [
 ]
 ```
 
-`drop` accepts `death_position` (default) or `respawn_inventory`. `player_kills_only = true` limits tags to deaths caused by another player. Death-position tags follow normal item physics: they can be destroyed in lava or the void. Use `respawn_inventory` to keep them out of those hazards.
+| Key | Default | Effect |
+| --- | --- | --- |
+| `drop` | `"death_position"` | `death_position` drops the tag where you died; `respawn_inventory` gives it to you on respawn. |
+| `player_kills_only` | `false` | When `true`, only deaths caused by another player create a tag. |
+| `function` | `""` | Optional function ID. It runs as the dead player at the death position (permission level 2, output silenced) before the tag is built. |
+| `lore` | Three lines: death message, coordinates and dimension, level and day | One JSON text component per line. `{"placeholder":"name"}` inserts a value. |
 
-Each `lore` string is one vanilla JSON text component. `{"placeholder":"name"}` inserts a component recursively, including inside `extra` and `with`; styles on the placeholder object override that value's styles. Any missing value hides the whole line. Invalid JSON/components hide that line and log one warning with its line number.
+Placeholders for `lore`:
 
 | Placeholder | Value |
 | --- | --- |
 | `player` | Deceased player's name |
 | `killer` | Killer's display name; absent without a killer |
 | `weapon` | Killer's main-hand item name; absent with an empty hand or no killer |
-| `death_message` | Unmodified vanilla death-message component |
-| `x`, `y`, `z` | Integer death block coordinates |
-| `dimension` | Localized dimension name, falling back to its ID |
-| `level` | Experience level at death |
-| `day` | World day: `level.getDayTime() / 24000 + 1` |
+| `death_message` | Vanilla death message |
+| `x`, `y`, `z` | Integer death coordinates |
+| `dimension` | Dimension name |
+| `level`, `day` | Experience level and world day |
 
-Vanilla `score`, `nbt` and `selector` components resolve as the deceased player at the death position. The optional `function` runs first with permission level 2 and suppressed output, including when another function caused the death. The old JSON configuration and datapack provider protocol are no longer used; an old configuration causes one startup warning and is not migrated.
+## Compatibility
 
-### Add a custom line with a function
+- Minecraft 1.21.1, 26.1.2 and 26.2
+- Fabric and NeoForge
+- RinLib is bundled; no separate installation is needed.
 
-For Minecraft 1.21.1, create `world/datapacks/tag_stats/pack.mcmeta`:
+## Download
 
-```json
-{"pack":{"pack_format":34,"description":"Dog tag statistics"}}
-```
-
-Create `world/datapacks/tag_stats/data/example/function/dog_tag.mcfunction`:
-
-```mcfunction
-scoreboard players set @s kc_kills 7
-```
-
-Run `/scoreboard objectives add kc_kills dummy` once, then `/reload`. Set `function = "example:dog_tag"` in the TOML and append this string inside its `lore` array:
-
-```toml
-  '{"text":"Kills: ","color":"#808080","italic":false,"extra":[{"score":{"name":"@s","objective":"kc_kills"},"color":"#E2C88C"}]}'
-```
-
-After restarting, new tags include `Kills: 7`. Replace `7` in the function with your own calculation. For 26.x, use the datapack format for your Minecraft version (listed in `profiles.json`). A complete [configuration and datapack](docs/examples/showcase/) is included.
-
-## Requirements
-
-RinLib is bundled; no separate installation is required.
-
-## Earlier layouts
-
-**Default information**
-
-![THE_cattail's dog tag with the default information](docs/images/default-dog-tag.png)
-
-**Customized information**
-
-![THE_cattail's dog tag with a custom layout and additional information](docs/images/custom-dog-tag.png)
+- [GitHub releases](https://github.com/rinchan-hoshino/kill-confirmed/releases)

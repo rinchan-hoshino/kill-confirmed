@@ -11,8 +11,7 @@
 ## 1.1.0
 
 - Fix dog tag registration on Minecraft 26.x, which requires an item registry ID before construction.
-- Fix datapack placeholder functions not completing before dog tag creation when a death is triggered inside another function.
-- Restore the surrounding command context after callbacks, including failures.
+- Fix datapack placeholder functions not completing before dog tag creation, and restore the command context after callbacks, including failures.
 - Share gameplay and snapshot serialization across the existing Minecraft versions; use RinLib 1.1.0 for Minecraft integration.
 - Remove unused delivery state-machine code and unnecessary pending-data copies.
 - Return copies of text components from public death snapshots.
