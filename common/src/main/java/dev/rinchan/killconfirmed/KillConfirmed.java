@@ -47,7 +47,7 @@ public final class KillConfirmed implements RinMod {
         config = KillConfirmedConfig.load(Objects.requireNonNull(configDirectory, "configDirectory"));
         if (java.nio.file.Files.exists(configDirectory.resolve("kill_confirmed.json")))
             LOGGER.warn("old config ignored, see kill_confirmed.toml");
-        LOGGER.info("Kill Confirmed initialized with drop strategy {}", config.dropStrategy());
+        LOGGER.debug("Kill Confirmed initialized with drop strategy {}", config.dropStrategy());
     }
 
     public static Item dogTag() {

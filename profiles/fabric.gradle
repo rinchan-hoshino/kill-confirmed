@@ -16,6 +16,6 @@ dependencies {
             artifact { name = localJar.name - '.jar'; type = 'jar'; extension = 'jar' }
         }
     }
-    add(Boolean.getBoolean('probe.bundled') ? 'modCompileOnly' : 'modImplementation', rinlib)
+    add('modImplementation', rinlib)
     include rinlib
 }

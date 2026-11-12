@@ -1,1 +1,0 @@
-The schema-one snapshot fixture was extracted from a dog tag created by the released 1.0.1 jar in the screenshot capture world. Player names and UUIDs were anonymized; the serialized structure is retained.
