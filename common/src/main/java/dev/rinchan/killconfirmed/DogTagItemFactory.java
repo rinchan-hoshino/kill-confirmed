@@ -2,9 +2,9 @@ package dev.rinchan.killconfirmed;
 
 import dev.rinchan.killconfirmed.api.DogTagSnapshot;
 import dev.rinchan.killconfirmed.api.PlaceholderContext;
-import dev.rinchan.rinlib.api.MinecraftData;
-import dev.rinchan.rinlib.api.PlayerContext;
-import dev.rinchan.rinlib.api.FunctionExecution;
+import dev.rinchan.killconfirmed.rinlib.api.MinecraftData;
+import dev.rinchan.killconfirmed.rinlib.api.PlayerContext;
+import dev.rinchan.killconfirmed.rinlib.api.FunctionExecution;
 import net.minecraft.network.chat.ComponentUtils;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.server.level.ServerLevel;

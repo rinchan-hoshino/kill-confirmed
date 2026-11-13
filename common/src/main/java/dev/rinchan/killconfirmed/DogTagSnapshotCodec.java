@@ -4,7 +4,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.rinchan.killconfirmed.api.DogTagSnapshot;
 import dev.rinchan.killconfirmed.api.EntityIdentity;
-import dev.rinchan.rinlib.api.MinecraftData;
+import dev.rinchan.killconfirmed.rinlib.api.MinecraftData;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;

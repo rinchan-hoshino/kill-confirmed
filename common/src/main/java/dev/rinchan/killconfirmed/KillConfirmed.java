@@ -1,11 +1,11 @@
 package dev.rinchan.killconfirmed;
 
 import java.nio.file.Path;
-import dev.rinchan.rinlib.v2.PlayerData;
-import dev.rinchan.rinlib.v2.PlayerEvents;
-import dev.rinchan.rinlib.v2.Rin;
-import dev.rinchan.rinlib.v2.RinMod;
-import dev.rinchan.rinlib.api.ItemProperties;
+import dev.rinchan.killconfirmed.rinlib.v2.PlayerData;
+import dev.rinchan.killconfirmed.rinlib.v2.PlayerEvents;
+import dev.rinchan.killconfirmed.rinlib.v2.Rin;
+import dev.rinchan.killconfirmed.rinlib.v2.RinMod;
+import dev.rinchan.killconfirmed.rinlib.api.ItemProperties;
 import net.minecraft.world.item.Rarity;
 import java.util.Objects;
 import java.util.function.Supplier;

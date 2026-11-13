@@ -3,17 +3,6 @@ apply from: 'common.gradle'
 dependencies {
     // NeoForge supplies NightConfig in its boot layer; bundling it creates duplicate modules.
     compileOnly 'com.electronwill.night-config:toml:3.8.3'
-    def rinlib = "maven.modrinth:rinlib:${releaseProperties.rinlib_version}+${minecraft}-neoforge"
-    if (project.hasProperty('rinlibJar')) {
-        def localJar = file(project.property('rinlibJar'))
-        // jarJar requires module coordinates for local jars without Automatic-Module-Name.
-        repositories { flatDir { dirs localJar.parentFile } }
-        rinlib = dependencies.create("dev.rinchan:rinlib-neoforge:${releaseProperties.rinlib_version}+${minecraft}") {
-            artifact { name = localJar.name - '.jar'; type = 'jar'; extension = 'jar' }
-        }
-    }
-    implementation rinlib
-    jarJar rinlib
 }
 neoForge {
     version = target.neo

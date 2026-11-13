@@ -1,8 +1,11 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "dev.rinchan.killconfirmed.mixin",
+  "package": "dev.rinchan.killconfirmed.rinlib.mixin",
   "compatibilityLevel": "JAVA_21",
-  "mixins": [],
+  "mixins": [
+    "KillConfirmedPlayerDataMixin",
+    "CommandContextAccessor"
+  ],
   "injectors": {"defaultRequire": 1}
 }

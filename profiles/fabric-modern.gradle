@@ -7,14 +7,4 @@ dependencies {
     minecraft "com.mojang:minecraft:${minecraft}"
     implementation "net.fabricmc:fabric-loader:${target.fabric_loader}"
     implementation "net.fabricmc.fabric-api:fabric-api:${target.fabric_api}"
-    def rinlib = "maven.modrinth:rinlib:${releaseProperties.rinlib_version}+${minecraft}-fabric"
-    if (project.hasProperty('rinlibJar')) {
-        def localJar = file(project.property('rinlibJar'))
-        repositories { flatDir { dirs localJar.parentFile } }
-        rinlib = dependencies.create("dev.rinchan:rinlib-fabric:${releaseProperties.rinlib_version}+${minecraft}") {
-            artifact { name = localJar.name - '.jar'; type = 'jar'; extension = 'jar' }
-        }
-    }
-    add('implementation', rinlib)
-    include rinlib
 }

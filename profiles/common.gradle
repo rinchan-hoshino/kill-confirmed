@@ -15,10 +15,6 @@ layout.buildDirectory = new File(sourceRoot, "build/profiles/${minecraft}-${modL
 java.toolchain.languageVersion = JavaLanguageVersion.of(target.java as int)
 repositories {
     mavenCentral()
-    exclusiveContent {
-        forRepository { maven { url = 'https://api.modrinth.com/maven' } }
-        filter { includeGroup 'maven.modrinth' }
-    }
 }
 tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
 tasks.withType(AbstractArchiveTask).configureEach {

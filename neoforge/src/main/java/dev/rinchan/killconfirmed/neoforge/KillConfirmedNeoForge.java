@@ -1,7 +1,7 @@
 package dev.rinchan.killconfirmed.neoforge;
 
 import dev.rinchan.killconfirmed.KillConfirmed;
-import dev.rinchan.rinlib.v2.RinNeoForge;
+import dev.rinchan.killconfirmed.rinlib.v2.RinNeoForge;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 
