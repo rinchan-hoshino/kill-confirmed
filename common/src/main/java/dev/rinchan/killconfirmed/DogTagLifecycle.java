@@ -2,6 +2,7 @@ package dev.rinchan.killconfirmed;
 
 import dev.rinchan.killconfirmed.api.DogTagSnapshot;
 import dev.rinchan.killconfirmed.api.EntityIdentity;
+import dev.rinchan.killconfirmed.portable.DogTagRule;
 import dev.rinchan.killconfirmed.portable.DropStrategy;
 import dev.rinchan.killconfirmed.rinlib.api.MinecraftData;
 import dev.rinchan.killconfirmed.rinlib.api.PlayerContext;
@@ -20,8 +21,8 @@ public final class DogTagLifecycle {
     private DogTagLifecycle() {}
 
     public static void onDeath(ServerPlayer player, DamageSource source) {
-        if (KillConfirmed.config().playerKillsOnly()
-                && (!(source.getEntity() instanceof ServerPlayer) || source.getEntity() == player)) return;
+        boolean killedByOtherPlayer = source.getEntity() instanceof ServerPlayer killer && killer != player;
+        if (!DogTagRule.createsTag(KillConfirmed.config().playerKillsOnly(), killedByOtherPlayer)) return;
         if (KillConfirmed.PENDING_DOG_TAG.get(player).isPresent()) {
             KillConfirmed.LOGGER.error("Refused to create a second pending dog tag for {}", PlayerContext.name(player));
             return;
