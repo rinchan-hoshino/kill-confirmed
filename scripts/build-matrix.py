@@ -8,7 +8,6 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--minecraft')
     parser.add_argument('--loader', choices=['fabric','neoforge'])
-    parser.add_argument('--rinlib-dir', type=Path, help='Optional matching RinLib matrix output for pre-release builds')
     parser.add_argument('--output', type=Path, default=ROOT/'build/matrix')
     args = parser.parse_args()
     targets = json.loads((ROOT/'profiles.json').read_text())
@@ -24,10 +23,6 @@ def main():
                  '--project-cache-dir',str(ROOT/'build/project-cache'/key),'--no-configuration-cache',
                  '--max-workers=2','--console=plain','-Dorg.gradle.internal.http.socketTimeout=15000',
                  '-Dorg.gradle.internal.http.connectionTimeout=15000']
-        if args.rinlib_dir:
-            dependency=args.rinlib_dir.resolve()/key/f'rinlib-{loader}-{properties["rinlib_version"]}+{mc}.jar'
-            if not dependency.is_file(): raise FileNotFoundError(dependency)
-            command.append('-PrinlibJar='+str(dependency))
         env=os.environ.copy()
         java=targets[mc]['java']
         if env.get(f'JAVA_{java}_HOME'):env['JAVA_HOME']=env[f'JAVA_{java}_HOME']

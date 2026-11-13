@@ -20,7 +20,7 @@ python3 scripts/build-matrix.py
 python3 scripts/build-matrix.py --minecraft 26.2 --loader neoforge
 ```
 
-Release artifacts and their hashes are written to `build/matrix/`. Set `JAVA_21_HOME` and `JAVA_25_HOME` to select installed JDKs. To build against a local RinLib release matrix, pass `--rinlib-dir=/absolute/path/to/rinlib/build/matrix`.
+Release artifacts and their hashes are written to `build/matrix/`. Set `JAVA_21_HOME` and `JAVA_25_HOME` to select installed JDKs.
 
 ## Configuration decisions (1.2.0)
 
