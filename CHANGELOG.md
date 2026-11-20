@@ -1,31 +1,34 @@
 # Changelog
 
-## 1.2.0
+## 2.0.0
 
-- Use a single commented `config/kill_confirmed.toml` for delivery, player-only kills, an optional function and lore. Old JSON is ignored with a startup warning; no migration is performed.
-- Replace the datapack function-tag/scratch-storage protocol and `when` conditions with an optional function and vanilla score, NBT and selector text components resolved as the deceased player.
-- Give new tags a gold, non-italic localized name and three restrained lore lines: vanilla death message, coordinates/dimension, and level/day.
-- Add `day` and `weapon` placeholders, plus short built-in names and individual coordinates. Hide a whole line when a value is absent or parsing fails; warn once per invalid line.
-- Bundle RinLib 2.0; retain existing snapshots, pending-player saves, client protocol and right-click behavior.
+### Highlights
+- **108-Slot Vanilla Dog Tag Case (`kill_confirmed:dog_tag_case`)**:
+  - Pure vanilla `#C6C6C6` stone dual-section container GUI (`9×6` visible grid + vertical scrollbar over `9×12` = 108 slots + locked-slot player inventory/hotbar).
+  - Compact header search bar with real-time match highlighting/dimming, Auto-Pickup toggle, One-Click Sort (*Newest* / *By Victim* / *By Level*), and Casualty Stats plaque (Top 5 victims; Shift tooltip shows Top 3).
+  - Bundle-style right-click quick insert & pop in any inventory screen.
+  - Configurable crafting recipe (`enable_dog_tag_case_recipe`), 8% structure chest loot (`enable_case_loot`), and 20-emerald Wandering Trader offer (`enable_wanderer_trade`).
+- **Enhanced Dog Tags (`kill_confirmed:dog_tag`)**:
+  - Fire & lava resistant by default (`fire_resistant = true`).
+  - Anti-farm per-victim cooldown (`cooldown_seconds = 0`).
+  - Built-in `location` placeholder detecting death-site structures with automatic biome fallback.
+  - Restrained 3-line default epitaph lore (`death_message`, `⌖ location · (x, y, z)`, `✦ Lv.<level> · Day <day>`).
+  - Right-click held dog tag inspection with subtle metallic chain sound (`SoundEvents.CHAIN_STEP`).
+- **Zero Dependencies & 8-Target Matrix**:
+  - Removed all embedded `RinLib` code and custom `PresencePayload` join-kick packets.
+  - Expanded build matrix to **8 targets**: `1.20.1` (Fabric, Forge), `1.21.1` (Fabric, NeoForge), `26.1.2` (Fabric, NeoForge), `26.2` (Fabric, NeoForge).
+- **Native Config Screen & 4 Languages**:
+  - Added zero-dependency `KillConfirmedConfigScreen` integrated with Mod Menu (Fabric), Forge, and NeoForge, hot-saving `config/kill_confirmed.toml`.
+  - Cleaned obsolete translation keys and completed `en_us`, `zh_cn`, `zh_tw`, and `ja_jp` localizations.
+- **Refreshed Artwork**:
+  - Adopted refined `16×16` item textures for `dog_tag` and `dog_tag_case`.
+  - Generated new `64×64` -> `512×512` military-steel riveted badge `icon.png` via `scripts/draw_icon.py`; removed legacy `icon-32.png`.
+
+## 1.2.0
+- Unified TOML configuration and native lore component templates.
 
 ## 1.1.0
-
-- Fix dog tag registration on Minecraft 26.x, which requires an item registry ID before construction.
-- Fix datapack placeholder functions not completing before dog tag creation, and restore the command context after callbacks, including failures.
-- Share gameplay and snapshot serialization across the existing Minecraft versions; use RinLib 1.1.0 for Minecraft integration.
-- Remove unused delivery state-machine code and unnecessary pending-data copies.
-- Return copies of text components from public death snapshots.
-- Preserve the schema-one snapshot layout, pending-player save key, item ID and configuration format.
-
-## 1.0.1
-
-- Publish the corrected mod icon with the existing dog-tag behavior unchanged.
-- Include the proof-gated drop-strategy and provider contract tests in source.
+- Unified supported versions and fixed dog tag callback execution.
 
 ## 1.0.0
-
-- Create one structured dog tag for every real server-player death.
-- Record localized death information, optional killer, coordinates, dimension and vanilla experience level.
-- Support death-position delivery by default or persistent respawn-inventory delivery by configuration.
-- Add data-driven native-component lore templates, Java placeholder providers and datapack function providers.
-- Release for Fabric and NeoForge with RinLib 1.0.0 as a required dependency.
+- Initial release.

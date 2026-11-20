@@ -1,66 +1,77 @@
 package dev.rinchan.killconfirmed;
 
+import dev.rinchan.killconfirmed.portable.DeathCooldownTracker;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import dev.rinchan.killconfirmed.rinlib.v2.PlayerData;
-import dev.rinchan.killconfirmed.rinlib.v2.PlayerEvents;
-import dev.rinchan.killconfirmed.rinlib.v2.Rin;
-import dev.rinchan.killconfirmed.rinlib.v2.RinMod;
-import dev.rinchan.killconfirmed.rinlib.api.ItemProperties;
-import net.minecraft.world.item.Rarity;
 import java.util.Objects;
 import java.util.function.Supplier;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.Item;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class KillConfirmed implements RinMod {
+/** Shared mod state, registry accessors, and configuration lifecycle for Kill Confirmed 2.0. */
+public final class KillConfirmed {
     public static final String MOD_ID = "kill_confirmed";
-    public static final String NETWORK_VERSION = "1";
     public static final Logger LOGGER = LoggerFactory.getLogger("Kill Confirmed");
-    public static final ResourceLocation DOG_TAG_ID = id("dog_tag");
 
-    // Register the save key before players load, including when lifecycle callbacks have not run yet.
-    static final PlayerData.Slot PENDING_DOG_TAG = PlayerData.slot("KillConfirmedPendingDogTag");
-    private static Supplier<Item> dogTag;
-    private static KillConfirmedConfig config;
+    private static final DeathCooldownTracker COOLDOWN_TRACKER = new DeathCooldownTracker();
 
-    public KillConfirmed() {}
+    private static volatile KillConfirmedConfig config = KillConfirmedConfig.defaults();
+    private static volatile Path configDir;
+    private static Supplier<Item> dogTagSupplier;
+    private static Supplier<Item> dogTagCaseSupplier;
+    private static Supplier<MenuType<?>> dogTagCaseMenuSupplier;
 
-    @Override
-    public void init(Rin env) {
-        var item = env.registerItem("dog_tag", KillConfirmed::createDogTag);
-        initialize(item, env.configDir());
-        env.requireOnClient(NETWORK_VERSION);
-        PlayerEvents.DEATH.register(DogTagLifecycle::onDeath);
-        PlayerEvents.COPY_AFTER_DEATH.register(DogTagLifecycle::copyPending);
-        PlayerEvents.RESPAWN.register(DogTagLifecycle::onRespawn);
+    private KillConfirmed() {}
+
+    public static synchronized void initConfig(Path directory) {
+        configDir = Objects.requireNonNull(directory, "configDirectory");
+        config = KillConfirmedConfig.load(configDir);
+        if (Files.exists(configDir.resolve("kill_confirmed.json"))) {
+            LOGGER.warn("Legacy kill_confirmed.json ignored; using kill_confirmed.toml");
+        }
+        LOGGER.info("Kill Confirmed 2.0 initialized (drop={}, fireResistant={}, cooldown={}s)",
+                config.dropStrategy(), config.fireResistant(), config.cooldownSeconds());
     }
 
-    public static Item createDogTag() {
-        return new Item(ItemProperties.of(DOG_TAG_ID.toString()).stacksTo(1).rarity(Rarity.RARE));
-    }
-
-    public static synchronized void initialize(Supplier<Item> dogTagSupplier, Path configDirectory) {
-        if (dogTag != null) throw new IllegalStateException("Kill Confirmed is already initialized");
-        dogTag = Objects.requireNonNull(dogTagSupplier, "dogTagSupplier");
-        config = KillConfirmedConfig.load(Objects.requireNonNull(configDirectory, "configDirectory"));
-        if (java.nio.file.Files.exists(configDirectory.resolve("kill_confirmed.json")))
-            LOGGER.warn("old config ignored, see kill_confirmed.toml");
-        LOGGER.debug("Kill Confirmed initialized with drop strategy {}", config.dropStrategy());
+    public static synchronized void bindRegistries(
+            Supplier<Item> dogTag,
+            Supplier<Item> dogTagCase,
+            Supplier<MenuType<?>> dogTagCaseMenu) {
+        dogTagSupplier = Objects.requireNonNull(dogTag, "dogTag");
+        dogTagCaseSupplier = Objects.requireNonNull(dogTagCase, "dogTagCase");
+        dogTagCaseMenuSupplier = Objects.requireNonNull(dogTagCaseMenu, "dogTagCaseMenu");
     }
 
     public static Item dogTag() {
-        if (dogTag == null) throw new IllegalStateException("Kill Confirmed is not initialized");
-        return dogTag.get();
+        if (dogTagSupplier == null) throw new IllegalStateException("Kill Confirmed items are not bound");
+        return dogTagSupplier.get();
+    }
+
+    public static Item dogTagCase() {
+        if (dogTagCaseSupplier == null) throw new IllegalStateException("Kill Confirmed items are not bound");
+        return dogTagCaseSupplier.get();
+    }
+
+    public static MenuType<?> dogTagCaseMenuType() {
+        if (dogTagCaseMenuSupplier == null) throw new IllegalStateException("Kill Confirmed menu is not bound");
+        return dogTagCaseMenuSupplier.get();
     }
 
     public static KillConfirmedConfig config() {
-        if (config == null) throw new IllegalStateException("Kill Confirmed is not initialized");
         return config;
     }
 
-    public static ResourceLocation id(String path) {
-        return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
+    public static synchronized void saveConfig(KillConfirmedConfig updated) {
+        Objects.requireNonNull(updated, "updated");
+        config = updated;
+        if (configDir != null) {
+            updated.save(configDir);
+        }
+    }
+
+    public static DeathCooldownTracker cooldownTracker() {
+        return COOLDOWN_TRACKER;
     }
 }

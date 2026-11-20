@@ -2,13 +2,22 @@
 drop = "death_position"
 # Only create a dog tag when another player is the killer
 player_kills_only = false
+# Keep dropped dog tags and dog tag cases immune to fire and lava
+fire_resistant = true
+# Per-player cooldown in seconds between dog tag drops (0 = unlimited)
+cooldown_seconds = 0
+# Enable crafting recipe for the Dog Tag Case
+enable_dog_tag_case_recipe = true
+# Enable rare Dog Tag Case loot in structure chests (Ancient City, Stronghold, Bastion, Mineshaft, Mansion)
+enable_case_loot = true
+# Enable Wandering Trader rare trade (20 emeralds -> 1 Dog Tag Case)
+enable_wanderer_trade = true
 # Optional mcfunction id, run as the dead player at the death position (permission level 2, output silenced) right before the tag is built.
-# Use it to fill scoreboards/storage, then read them in lore with vanilla "score"/"nbt" text components.
 function = ""
 # One entry per lore line, each a JSON text component. {"placeholder":"<name>"} inserts a value.
-# A line that uses a placeholder with no value (e.g. killer on an environmental death) is hidden.
+# Built-in placeholders: player, killer, weapon, death_message, location, x, y, z, dimension, level, day.
 lore = [
-  '{"placeholder":"death_message","color":"gray","italic":false}',
-  '{"text":"","color":"gray","italic":false,"extra":[{"placeholder":"x"},{"text":", "},{"placeholder":"y"},{"text":", "},{"placeholder":"z"},{"text":"  "},{"placeholder":"dimension","color":"#808080"}]}',
-  '{"translate":"kill_confirmed.lore.level_day","color":"#808080","italic":false,"with":[{"placeholder":"level","color":"#E2C88C"},{"placeholder":"day","color":"#E2C88C"}]}',
+  '{"placeholder":"death_message","color":"#CCCCCC","italic":false}',
+  '{"text":"","color":"#808080","italic":false,"extra":[{"text":"⌖ ","color":"#808080"},{"placeholder":"location","color":"#CCCCCC"},{"text":" · (","color":"#808080"},{"placeholder":"x","color":"#808080"},{"text":", ","color":"#808080"},{"placeholder":"y","color":"#808080"},{"text":", ","color":"#808080"},{"placeholder":"z","color":"#808080"},{"text":")","color":"#808080"}]}',
+  '{"text":"","color":"#707070","italic":false,"extra":[{"text":"✦ ","color":"#707070"},{"translate":"kill_confirmed.lore.level_day","color":"#D8C088","with":[{"placeholder":"level","color":"#D8C088"},{"placeholder":"day","color":"#D8C088"}]}]}',
 ]

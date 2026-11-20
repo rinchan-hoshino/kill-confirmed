@@ -4,18 +4,35 @@
   "version": "${mod_version}",
   "name": "${mod_name}",
   "description": "${mod_description}",
-  "authors": ["${mod_authors}"],
+  "authors": [
+    "${mod_authors}"
+  ],
   "license": "${mod_license}",
   "environment": "*",
   "entrypoints": {
-    "main": ["dev.rinchan.killconfirmed.fabric.KillConfirmedFabric"],
-    "client": ["dev.rinchan.killconfirmed.rinlib.v2.RinFabricClient"]
+    "main": [
+      "dev.rinchan.killconfirmed.fabric.KillConfirmedFabric"
+    ],
+    "modmenu": [
+      "dev.rinchan.killconfirmed.fabric.KillConfirmedModMenu"
+    ]
   },
-  "mixins": ["kill_confirmed.mixins.json"],
+  "mixins": [
+    "kill_confirmed.mixins.json",
+    {
+      "config": "kill_confirmed.fabric.mixins.json",
+      "environment": "client"
+    }
+  ],
   "depends": {
-    "fabricloader": ">=${fabric_loader_version}",
-    "fabric-api": ">=${fabric_api_version}",
+    "fabricloader": ">=${fabric_loader_min_version}",
     "minecraft": "${minecraft_version}",
     "java": ">=${java_version}"
+  },
+  "icon": "icon.png",
+  "contact": {
+    "homepage": "https://modrinth.com/mod/kill-confirmed",
+    "sources": "https://github.com/rinchan-hoshino/kill-confirmed",
+    "issues": "https://github.com/rinchan-hoshino/kill-confirmed/issues"
   }
 }

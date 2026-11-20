@@ -1,0 +1,11 @@
+{
+  "required": true,
+  "package": "dev.rinchan.killconfirmed.fabric.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "client": [
+    "MenuScreensMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

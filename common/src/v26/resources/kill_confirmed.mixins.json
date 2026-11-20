@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "package": "dev.rinchan.killconfirmed.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "ServerPlayerMixin",
+    "PlayerListRespawnMixin",
+    "ItemEntityMixin",
+    "ShapedRecipeMixin",
+    "LootContainerMixin",
+    "WanderingTraderMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

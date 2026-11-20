@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "NIN",
+    "LTL",
+    "NIN"
+  ],
+  "key": {
+    "N": "minecraft:iron_nugget",
+    "I": "minecraft:iron_ingot",
+    "L": "minecraft:leather",
+    "T": "minecraft:name_tag"
+  },
+  "result": {
+    "id": "kill_confirmed:dog_tag_case",
+    "count": 1
+  }
+}

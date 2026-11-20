@@ -1,0 +1,66 @@
+package dev.rinchan.killconfirmed.api;
+
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+
+/** Captured death data stored on every dog tag. */
+public record DogTagSnapshot(
+        UUID ownerId,
+        String ownerName,
+        Component ownerDisplayName,
+        Optional<EntityIdentity> killer,
+        Component deathMessage,
+        BlockPos deathPosition,
+        ResourceLocation dimensionId,
+        Component dimensionDisplayName,
+        ResourceLocation locationId,
+        Component locationDisplayName,
+        int experienceLevel) {
+
+    public DogTagSnapshot {
+        Objects.requireNonNull(ownerId, "ownerId");
+        if (Objects.requireNonNull(ownerName, "ownerName").isBlank()) {
+            throw new IllegalArgumentException("ownerName must not be blank");
+        }
+        ownerDisplayName = Objects.requireNonNull(ownerDisplayName, "ownerDisplayName").copy();
+        killer = Objects.requireNonNull(killer, "killer");
+        deathMessage = Objects.requireNonNull(deathMessage, "deathMessage").copy();
+        deathPosition = Objects.requireNonNull(deathPosition, "deathPosition").immutable();
+        Objects.requireNonNull(dimensionId, "dimensionId");
+        dimensionDisplayName = Objects.requireNonNull(dimensionDisplayName, "dimensionDisplayName").copy();
+        locationId = locationId != null ? locationId : dimensionId;
+        locationDisplayName = (locationDisplayName != null ? locationDisplayName : dimensionDisplayName).copy();
+        if (experienceLevel < 0) throw new IllegalArgumentException("experienceLevel must not be negative");
+    }
+
+    /** Backwards-compatible 9-arg constructor. */
+    public DogTagSnapshot(
+            UUID ownerId,
+            String ownerName,
+            Component ownerDisplayName,
+            Optional<EntityIdentity> killer,
+            Component deathMessage,
+            BlockPos deathPosition,
+            ResourceLocation dimensionId,
+            Component dimensionDisplayName,
+            int experienceLevel) {
+        this(ownerId, ownerName, ownerDisplayName, killer, deathMessage, deathPosition,
+                dimensionId, dimensionDisplayName, dimensionId, dimensionDisplayName, experienceLevel);
+    }
+
+    @Override
+    public Component ownerDisplayName() { return ownerDisplayName.copy(); }
+
+    @Override
+    public Component deathMessage() { return deathMessage.copy(); }
+
+    @Override
+    public Component dimensionDisplayName() { return dimensionDisplayName.copy(); }
+
+    @Override
+    public Component locationDisplayName() { return locationDisplayName.copy(); }
+}
