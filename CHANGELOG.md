@@ -15,14 +15,14 @@
   - Restrained 3-line default epitaph lore (`death_message`, `⌖ location · (x, y, z)`, `✦ Lv.<level> · Day <day>`).
   - Right-click held dog tag inspection with subtle metallic chain sound (`SoundEvents.CHAIN_STEP`).
 - **Zero Dependencies & 8-Target Matrix**:
-  - Removed all embedded `RinLib` code and custom `PresencePayload` join-kick packets.
+  - Standalone single JAR with zero external dependencies.
   - Expanded build matrix to **8 targets**: `1.20.1` (Fabric, Forge), `1.21.1` (Fabric, NeoForge), `26.1.2` (Fabric, NeoForge), `26.2` (Fabric, NeoForge).
 - **Native Config Screen & 4 Languages**:
   - Added zero-dependency `KillConfirmedConfigScreen` integrated with Mod Menu (Fabric), Forge, and NeoForge, hot-saving `config/kill_confirmed.toml`.
   - Cleaned obsolete translation keys and completed `en_us`, `zh_cn`, `zh_tw`, and `ja_jp` localizations.
 - **Refreshed Artwork**:
   - Adopted refined `16×16` item textures for `dog_tag` and `dog_tag_case`.
-  - Generated new `64×64` -> `512×512` military-steel riveted badge `icon.png` via `scripts/draw_icon.py`; removed legacy `icon-32.png`.
+  - Generated new `64×64` -> `512×512` military-steel riveted badge `icon.png` via `scripts/draw_icon.py`.
 
 ## 1.2.0
 - Unified TOML configuration and native lore component templates.

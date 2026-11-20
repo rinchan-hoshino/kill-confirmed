@@ -6,7 +6,7 @@
 
 **Kill Confirmed** mints a fire-resistant **Dog Tag** (`kill_confirmed:dog_tag`) whenever a player falls, and includes a **108-slot vanilla Dog Tag Case** (`kill_confirmed:dog_tag_case`) to collect, search, sort, and inspect your trophies.
 
-Zero library dependencies — no RinLib, no Fabric API required.
+Standalone single JAR with zero external dependencies (no Fabric API required).
 
 ---
 
