@@ -3,7 +3,6 @@ package dev.rinchan.killconfirmed;
 import dev.rinchan.killconfirmed.portable.DogTagCaseModel;
 import java.util.List;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -103,7 +102,7 @@ public final class DogTagCaseItem extends Item {
                 .withStyle(autoPickup ? ChatFormatting.GREEN : ChatFormatting.DARK_GRAY));
 
         if (count > 0) {
-            if (Screen.hasShiftDown()) {
+            if (KillConfirmed.isShiftDown()) {
                 var top = DogTagCaseModel.topVictims(DogTagCaseStorage.readOwnerNames(stack), 3);
                 for (var entry : top) {
                     tooltip.add(Component.literal("  • ").withStyle(ChatFormatting.DARK_GRAY)

@@ -17,8 +17,22 @@ sourceSets.main.java.srcDir root.file("common/src/${apiLayer}/java")
 sourceSets.main.resources.srcDir root.file('common/src/main/resources')
 sourceSets.main.resources.srcDir root.file("common/src/${apiLayer}/resources")
 sourceSets.test.java.srcDir root.file('common/src/test/java')
+if (apiLayer == 'v121') {
+    sourceSets.test.java.srcDir 'src/testV121/java'
+}
 sourceSets.test.compileClasspath += sourceSets.main.compileClasspath
 sourceSets.test.runtimeClasspath += sourceSets.main.runtimeClasspath
+
+if (root.minecraft_version == '1.21.1') {
+    sourceSets {
+        gameTest {
+            java.setSrcDirs(['src/gametest/java'])
+            resources.setSrcDirs(['src/gametest/resources'])
+            compileClasspath += sourceSets.main.compileClasspath + sourceSets.main.output
+            runtimeClasspath += sourceSets.main.runtimeClasspath
+        }
+    }
+}
 sourceSets.main.resources.srcDir tasks.register('generateModMetadata', ProcessResources) {
     def replaceProperties = [
         minecraft_version_range: root.minecraft_version_range,
@@ -45,6 +59,11 @@ neoForge {
         "${modId}" {
             sourceSet(sourceSets.main)
         }
+        if (root.minecraft_version == '1.21.1') {
+            kill_confirmed_e2e {
+                sourceSet(sourceSets.gameTest)
+            }
+        }
     }
     unitTest {
         enable()
@@ -55,6 +74,14 @@ neoForge {
         server {
             server()
             programArgument '--nogui'
+        }
+        if (root.minecraft_version == '1.21.1') {
+            gameTestServer {
+                type = 'gameTestServer'
+                gameDirectory = layout.buildDirectory.dir('run-gametest')
+                loadedMods = [mods.kill_confirmed_e2e]
+                systemProperty 'neoforge.enabledGameTestNamespaces', 'kill_confirmed_e2e'
+            }
         }
         configureEach {
             logLevel = org.slf4j.event.Level.INFO
@@ -71,7 +98,31 @@ dependencies {
 }
 
 tasks.named('test', Test) {
+    dependsOn(tasks.named('jar'))
     useJUnitPlatform()
+    doFirst {
+        systemProperty 'killconfirmed.jar', tasks.named('jar').get().archiveFile.get().asFile.absolutePath
+        systemProperty 'killconfirmed.projectRoot', root.projectDir.absolutePath
+        systemProperty 'killconfirmed.apiLayer', apiLayer
+        systemProperty 'killconfirmed.loader', 'neoforge'
+        if (System.getProperty('killconfirmed.scanAllReleases') != null) {
+            systemProperty 'killconfirmed.scanAllReleases', System.getProperty('killconfirmed.scanAllReleases')
+        }
+    }
+}
+
+if (root.minecraft_version == '1.21.1') {
+    def stagePackagedJar = tasks.register('stagePackagedJarForGameTest', Sync) {
+        dependsOn(tasks.named('jar'))
+        from(tasks.named('jar').flatMap { it.archiveFile })
+        into(layout.buildDirectory.dir('run-gametest/mods'))
+    }
+    tasks.matching { it.name == 'runGameTestServer' }.configureEach {
+        dependsOn(stagePackagedJar)
+        doFirst {
+            delete(layout.buildDirectory.file('run-gametest/config/kill_confirmed.toml'))
+        }
+    }
 }
 
 publishing {

@@ -1,4 +1,4 @@
-package dev.rinchan.killconfirmed.fabric.mixin;
+package dev.rinchan.killconfirmed.fabric.client.mixin;
 
 import dev.rinchan.killconfirmed.KillConfirmed;
 import dev.rinchan.killconfirmed.client.DogTagCaseScreen;

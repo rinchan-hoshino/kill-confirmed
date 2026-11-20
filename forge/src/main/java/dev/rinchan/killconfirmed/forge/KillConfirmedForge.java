@@ -3,20 +3,14 @@ package dev.rinchan.killconfirmed.forge;
 import dev.rinchan.killconfirmed.DogTagCaseMenu;
 import dev.rinchan.killconfirmed.KillConfirmed;
 import dev.rinchan.killconfirmed.VersionFactory;
-import dev.rinchan.killconfirmed.client.DogTagCaseScreen;
-import dev.rinchan.killconfirmed.client.KillConfirmedConfigScreen;
-import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.ConfigScreenHandler;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.registries.DeferredRegister;
@@ -44,12 +38,8 @@ public final class KillConfirmedForge {
         MENUS.register(modBus);
         KillConfirmed.bindRegistries(DOG_TAG::get, DOG_TAG_CASE::get, DOG_TAG_CASE_MENU::get);
         modBus.addListener(this::addCreativeTabItems);
-        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
-            modBus.addListener(this::onClientSetup);
-            ModLoadingContext.get().registerExtensionPoint(
-                    ConfigScreenHandler.ConfigScreenFactory.class,
-                    () -> new ConfigScreenHandler.ConfigScreenFactory((mc, parent) -> new KillConfirmedConfigScreen(parent)));
-        });
+        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () ->
+                dev.rinchan.killconfirmed.forge.client.KillConfirmedForgeClient.init(modBus));
     }
 
     private void addCreativeTabItems(BuildCreativeModeTabContentsEvent event) {
@@ -57,12 +47,5 @@ public final class KillConfirmedForge {
             event.accept(DOG_TAG_CASE.get());
             event.accept(DOG_TAG.get());
         }
-    }
-
-    @SuppressWarnings("unchecked")
-    private void onClientSetup(FMLClientSetupEvent event) {
-        event.enqueueWork(() -> MenuScreens.register(
-                (MenuType<DogTagCaseMenu>) KillConfirmed.dogTagCaseMenuType(),
-                DogTagCaseScreen::new));
     }
 }

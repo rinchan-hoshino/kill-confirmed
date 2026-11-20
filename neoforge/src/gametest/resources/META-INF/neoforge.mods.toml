@@ -1,0 +1,16 @@
+modLoader="javafml"
+loaderVersion="[4,)"
+license="GPL-3.0-only"
+
+[[mods]]
+modId="kill_confirmed_e2e"
+version="1.0.0"
+displayName="Kill Confirmed Packaged-JAR E2E Harness"
+description="Black-box GameTest suite verifying the real packaged Kill Confirmed JAR."
+
+[[dependencies.kill_confirmed_e2e]]
+modId="kill_confirmed"
+type="required"
+versionRange="[2.0.0,)"
+ordering="AFTER"
+side="BOTH"

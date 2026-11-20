@@ -13,8 +13,11 @@
     "main": [
       "dev.rinchan.killconfirmed.fabric.KillConfirmedFabric"
     ],
+    "client": [
+      "dev.rinchan.killconfirmed.fabric.client.KillConfirmedFabricClient"
+    ],
     "modmenu": [
-      "dev.rinchan.killconfirmed.fabric.KillConfirmedModMenu"
+      "dev.rinchan.killconfirmed.fabric.client.KillConfirmedModMenu"
     ]
   },
   "mixins": [

@@ -4,6 +4,7 @@ import dev.rinchan.killconfirmed.portable.DeathCooldownTracker;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.Item;
@@ -22,6 +23,7 @@ public final class KillConfirmed {
     private static Supplier<Item> dogTagSupplier;
     private static Supplier<Item> dogTagCaseSupplier;
     private static Supplier<MenuType<?>> dogTagCaseMenuSupplier;
+    private static volatile BooleanSupplier shiftDownSupplier = () -> false;
 
     private KillConfirmed() {}
 
@@ -73,5 +75,13 @@ public final class KillConfirmed {
 
     public static DeathCooldownTracker cooldownTracker() {
         return COOLDOWN_TRACKER;
+    }
+
+    public static void bindShiftDown(BooleanSupplier supplier) {
+        shiftDownSupplier = Objects.requireNonNull(supplier, "shiftDownSupplier");
+    }
+
+    public static boolean isShiftDown() {
+        return shiftDownSupplier.getAsBoolean();
     }
 }

@@ -32,6 +32,16 @@ jobs:
       - name: Build all 8 targets & run unit tests
         run: python3 scripts/build-matrix.py
 
+      - name: Run Property, Screen Lifecycle & Architecture Contract Gates (all 8 JARs)
+        env:
+          JAVA_HOME: ${{ env.JAVA_21_HOME }}
+        run: ./gradlew :neoforge:test -Pminecraft_version=1.21.1 -Ploader=neoforge -Dkillconfirmed.scanAllReleases=true --no-configuration-cache --rerun-tasks
+
+      - name: Run Packaged-JAR E2E GameTest Server (1.21.1 NeoForge)
+        env:
+          JAVA_HOME: ${{ env.JAVA_21_HOME }}
+        run: ./gradlew :neoforge:runGameTestServer -Pminecraft_version=1.21.1 -Ploader=neoforge --no-configuration-cache
+
       - name: Upload release JARs
         uses: actions/upload-artifact@v4
         with:

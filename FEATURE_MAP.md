@@ -31,5 +31,28 @@
   - `client/DogTagCaseScreen.java` — 100% vanilla `#C6C6C6` stone dual-section GUI, scrollbar, search bar, auto-pickup & sort micro-buttons, Top-5 casualty stats plaque
   - `client/KillConfirmedConfigScreen.java` — native zero-dependency settings screen
   - `mixin/` — `ServerPlayerMixin`, `PlayerListRespawnMixin`, `ItemEntityMixin`, `ShapedRecipeMixin`, `LootContainerMixin`, `WanderingTraderMixin`
-- `fabric/`, `forge/`, `neoforge/` — thin loader entrypoints, ModMenu compile-time stub, and `MenuScreensMixin` (zero Fabric API)
-- `common/src/test/java/dev/rinchan/killconfirmed/portable/` — JUnit 5 test suite (7 test classes)
+- `fabric/`, `forge/`, `neoforge/` — thin loader entrypoints, isolated `.client` packages, ModMenu compile-time stub, and `MenuScreensMixin` (zero Fabric API)
+- `common/src/test/java/dev/rinchan/killconfirmed/portable/` — JUnit 5 test suite (9 test classes including `DogTagCasePropertyTest` and `ArchitectureContractTest`)
+- `neoforge/src/testV121/java/dev/rinchan/killconfirmed/client/ScreenLifecycleTest.java` — headless client Screen lifecycle verification (`DogTagCaseScreen` & `KillConfirmedConfigScreen`)
+- `neoforge/src/gametest/java/dev/rinchan/killconfirmed/e2e/KillConfirmedPackagedJarGameTests.java` — Packaged-JAR black-box GameTest E2E suite on real Minecraft `1.21.1` NeoForge
+
+## Verification Gates
+
+All three hard verification gates are wired into `.github/workflows/ci.yml`:
+
+1. **Gate 1 — Packaged-JAR E2E GameTest + Client Screen Lifecycle (`1.21.1` NeoForge)**:
+   - Stages the real built `kill_confirmed-neoforge-2.0.0+1.21.1.jar` into `run-gametest/mods/` and verifies real `ServerPlayer.die()` 3-line epitaph + `location` landmark, lava/fire `fire_resistant` ticks, anti-farm cooldown, Bundle interactions, `DogTagCaseMenu` `9×6` → `108`-slot scroll/auto-pickup/sort/`quickMoveStack` stress, plus headless `DogTagCaseScreen` & `KillConfirmedConfigScreen` init.
+   ```bash
+   ./gradlew :neoforge:runGameTestServer -Pminecraft_version=1.21.1 -Ploader=neoforge --no-configuration-cache
+   ./gradlew :neoforge:test --tests "dev.rinchan.killconfirmed.client.ScreenLifecycleTest" -Pminecraft_version=1.21.1 -Ploader=neoforge --no-configuration-cache
+   ```
+2. **Gate 2 — Property Invariant Bombardment (`DogTagCasePropertyTest`)**:
+   - Fixed-seed randomized 2,000-step (+ 4×1,000-step + 1,500-iteration boundary fuzz) bombardment of the 108-slot `DogTagCaseModel` asserting strict dog tag count & NBT conservation.
+   ```bash
+   ./gradlew :neoforge:test --tests "dev.rinchan.killconfirmed.portable.DogTagCasePropertyTest" -Pminecraft_version=1.21.1 -Ploader=neoforge --no-configuration-cache
+   ```
+3. **Gate 3 — Architecture Contract Guardrails (`ArchitectureContractTest`)**:
+   - Bytecode constant-pool audit of real packaged `.jar`s for Dedicated Server client-class isolation, bidirectional `*.mixins.json` ↔ `.jar` ↔ `@Mixin` closure, and zero `rinlib` / `com/terraformersmc/modmenu` stub leaks.
+   ```bash
+   ./gradlew :neoforge:test --tests "dev.rinchan.killconfirmed.portable.ArchitectureContractTest" -Pminecraft_version=1.21.1 -Ploader=neoforge -Dkillconfirmed.scanAllReleases=true --no-configuration-cache
+   ```

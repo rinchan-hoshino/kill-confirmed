@@ -1,4 +1,4 @@
-package dev.rinchan.killconfirmed.fabric;
+package dev.rinchan.killconfirmed.fabric.client;
 
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;

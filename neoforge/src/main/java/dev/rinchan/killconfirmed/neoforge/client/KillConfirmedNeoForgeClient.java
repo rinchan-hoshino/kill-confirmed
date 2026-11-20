@@ -1,8 +1,9 @@
-package dev.rinchan.killconfirmed.neoforge;
+package dev.rinchan.killconfirmed.neoforge.client;
 
 import dev.rinchan.killconfirmed.DogTagCaseMenu;
 import dev.rinchan.killconfirmed.KillConfirmed;
 import dev.rinchan.killconfirmed.client.DogTagCaseScreen;
+import dev.rinchan.killconfirmed.client.KillConfirmedClientHooks;
 import dev.rinchan.killconfirmed.client.KillConfirmedConfigScreen;
 import net.minecraft.world.inventory.MenuType;
 import net.neoforged.api.distmarker.Dist;
@@ -15,6 +16,7 @@ import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 @Mod(value = KillConfirmed.MOD_ID, dist = Dist.CLIENT)
 public final class KillConfirmedNeoForgeClient {
     public KillConfirmedNeoForgeClient(ModContainer container, IEventBus modBus) {
+        KillConfirmedClientHooks.init();
         container.registerExtensionPoint(
                 IConfigScreenFactory.class,
                 (modContainer, parent) -> new KillConfirmedConfigScreen(parent));
