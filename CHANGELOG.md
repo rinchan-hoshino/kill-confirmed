@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.1
+
+### Fixed
+- **Dedicated Server Isolation**: Stripped client `Screen` / `Minecraft` constant-pool references from `DogTagCaseItem` so dedicated servers never load or reference client-only UI classes.
+
 ## 2.0.0
 
 ### Highlights

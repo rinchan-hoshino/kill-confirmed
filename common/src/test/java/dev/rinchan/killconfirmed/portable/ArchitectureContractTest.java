@@ -227,10 +227,25 @@ class ArchitectureContractTest {
             return p;
         }
         Path root = projectRoot();
-        Path defaultJar = root.resolve("build/profiles/1.21.1/neoforge/libs/kill_confirmed-neoforge-2.0.0+1.21.1.jar");
+        String modVersion = readModVersion(root);
+        Path defaultJar = root.resolve("build/profiles/1.21.1/neoforge/libs/kill_confirmed-neoforge-" + modVersion + "+1.21.1.jar");
         assertTrue(Files.isRegularFile(defaultJar),
                 "Primary built JAR not found (run :neoforge:jar first): " + defaultJar);
         return defaultJar;
+    }
+
+    private static String readModVersion(Path root) {
+        Path props = root.resolve("gradle.properties");
+        try {
+            for (String line : Files.readAllLines(props)) {
+                String trimmed = line.trim();
+                if (trimmed.startsWith("mod_version=")) {
+                    return trimmed.substring("mod_version=".length()).trim();
+                }
+            }
+        } catch (IOException ignored) {
+        }
+        throw new IllegalStateException("mod_version not found in " + props);
     }
 
     private static List<Path> targetJars() throws IOException {

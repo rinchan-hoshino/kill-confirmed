@@ -52,8 +52,10 @@ run_in_container() {
     "${runtime}" build -f "${ROOT}/Dockerfile.verify" -t "${IMAGE_NAME}" "${ROOT}"
     echo "==> Running full verification suite inside container..."
     exec "${runtime}" run --rm --init \
+        -e ORG_GRADLE_PROJECT_neoform_decompile_maxMemory=2g \
+        -e GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx2560m" \
         -v "${ROOT}:/workspace" \
-        -v "rinchan-gradle-cache:/root/.gradle" \
+        -v "rinchan-gradle-cache-kc:/root/.gradle" \
         -w /workspace \
         "${IMAGE_NAME}" \
         ./scripts/verify.sh
