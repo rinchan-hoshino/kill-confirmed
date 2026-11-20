@@ -38,7 +38,15 @@
 
 ## Verification Gates
 
-All three hard verification gates are wired into `.github/workflows/ci.yml`:
+Install the local `pre-push` hook and run all three verification gates via `./scripts/verify.sh` (native or `--container` using `Dockerfile.verify`):
+
+```bash
+./scripts/setup-hooks.sh
+./scripts/verify.sh              # Native (or auto-fallback to container)
+./scripts/verify.sh --container  # Reproducible Ubuntu 24.04 + Temurin 17/21/25 + xvfb-run
+```
+
+Individual gate commands:
 
 1. **Gate 1 — Packaged-JAR E2E GameTest + Client Screen Lifecycle (`1.21.1` NeoForge)**:
    - Stages the real built `kill_confirmed-neoforge-2.0.0+1.21.1.jar` into `run-gametest/mods/` and verifies real `ServerPlayer.die()` 3-line epitaph + `location` landmark, lava/fire `fire_resistant` ticks, anti-farm cooldown, Bundle interactions, `DogTagCaseMenu` `9×6` → `108`-slot scroll/auto-pickup/sort/`quickMoveStack` stress, plus headless `DogTagCaseScreen` & `KillConfirmedConfigScreen` init.
