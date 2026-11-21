@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.0.2
+
+### Fixed
+- **1.20.1 Forge `pack.mcmeta`**: Added `pack.mcmeta` (`pack_format: 15`) exclusively to the `1.20.1` Forge JAR to eliminate the client `ResourcePackInfo` startup warning, with strict per-target JAR assertions in `scripts/build-matrix.py`.
+
+### Added
+- **Minecraft 26.3 Support**: Added `26.3` (`Fabric` & `NeoForge`, Java 25) to `profiles.json`, expanding the release matrix to 10 targets.
+
 ## 2.0.1
 
 ### Fixed

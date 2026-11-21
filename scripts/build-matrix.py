@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build all 8 supported loader/version targets from profiles.json and verify zero-RinLib JARs."""
+"""Build all 10 supported loader/version targets from profiles.json and verify zero-RinLib JARs."""
 import argparse
 import fcntl
 import hashlib
@@ -34,14 +34,30 @@ def discover_jdk(major: int) -> str:
     raise RuntimeError(f"Could not find JDK {major}; set {env_key}")
 
 
-def verify_jar(jar_path: Path):
+def verify_jar(jar_path: Path, minecraft: str, loader: str):
     size = jar_path.stat().st_size
     if size >= MAX_JAR_BYTES:
         raise RuntimeError(f"JAR exceeds budget ({MAX_JAR_BYTES}B): {jar_path.name} ({size} bytes)")
     with zipfile.ZipFile(jar_path) as zf:
-        for name in zf.namelist():
+        names = set(zf.namelist())
+        for name in names:
             if "rinlib" in name.lower():
                 raise RuntimeError(f"Forbidden rinlib entry found in {jar_path.name}: {name}")
+        if minecraft == "1.20.1" and loader == "forge":
+            if "pack.mcmeta" not in names:
+                raise RuntimeError(f"Missing pack.mcmeta in {jar_path.name}")
+            pack_meta = json.loads(zf.read("pack.mcmeta").decode("utf-8"))
+            pack_format = pack_meta.get("pack", {}).get("pack_format")
+            if pack_format != 15:
+                raise RuntimeError(
+                    f"Expected pack.pack_format == 15 in {jar_path.name}, got {pack_format!r}"
+                )
+        elif "pack.mcmeta" in names:
+            pack_meta = json.loads(zf.read("pack.mcmeta").decode("utf-8"))
+            if pack_meta.get("pack", {}).get("pack_format") == 15:
+                raise RuntimeError(
+                    f"Unexpected pack_format == 15 pack.mcmeta in {jar_path.name}"
+                )
 
 
 def main():
@@ -94,7 +110,7 @@ def main():
             )
             target = output / f"kill-confirmed-{version}+{minecraft}-{loader}.jar"
             shutil.copy2(source, target)
-            verify_jar(target)
+            verify_jar(target, minecraft, loader)
             binary = target.read_bytes()
             manifest.append(
                 dict(

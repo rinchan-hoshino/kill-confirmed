@@ -1,17 +1,19 @@
-# Kill Confirmed 2.0.0 — Feature & Architecture Map
+# Kill Confirmed 2.0.2 — Feature & Architecture Map
 
-## Build Matrix (8 Targets)
+## Build Matrix (10 Targets)
 
 | Target | API Layer | Java | Output JAR |
 | --- | --- | --- | --- |
-| `1.20.1` Fabric | `v120` | 17 | `kill-confirmed-2.0.0+1.20.1-fabric.jar` |
-| `1.20.1` Forge | `v120` | 17 | `kill-confirmed-2.0.0+1.20.1-forge.jar` |
-| `1.21.1` Fabric | `v121` | 21 | `kill-confirmed-2.0.0+1.21.1-fabric.jar` |
-| `1.21.1` NeoForge | `v121` | 21 | `kill-confirmed-2.0.0+1.21.1-neoforge.jar` |
-| `26.1.2` Fabric | `v26` | 25 | `kill-confirmed-2.0.0+26.1.2-fabric.jar` |
-| `26.1.2` NeoForge | `v26` | 25 | `kill-confirmed-2.0.0+26.1.2-neoforge.jar` |
-| `26.2` Fabric | `v26` | 25 | `kill-confirmed-2.0.0+26.2-fabric.jar` |
-| `26.2` NeoForge | `v26` | 25 | `kill-confirmed-2.0.0+26.2-neoforge.jar` |
+| `1.20.1` Fabric | `v120` | 17 | `kill-confirmed-2.0.2+1.20.1-fabric.jar` |
+| `1.20.1` Forge | `v120` | 17 | `kill-confirmed-2.0.2+1.20.1-forge.jar` |
+| `1.21.1` Fabric | `v121` | 21 | `kill-confirmed-2.0.2+1.21.1-fabric.jar` |
+| `1.21.1` NeoForge | `v121` | 21 | `kill-confirmed-2.0.2+1.21.1-neoforge.jar` |
+| `26.1.2` Fabric | `v26` | 25 | `kill-confirmed-2.0.2+26.1.2-fabric.jar` |
+| `26.1.2` NeoForge | `v26` | 25 | `kill-confirmed-2.0.2+26.1.2-neoforge.jar` |
+| `26.2` Fabric | `v26` | 25 | `kill-confirmed-2.0.2+26.2-fabric.jar` |
+| `26.2` NeoForge | `v26` | 25 | `kill-confirmed-2.0.2+26.2-neoforge.jar` |
+| `26.3` Fabric | `v26` | 25 | `kill-confirmed-2.0.2+26.3-fabric.jar` |
+| `26.3` NeoForge | `v26` | 25 | `kill-confirmed-2.0.2+26.3-neoforge.jar` |
 
 ## Source Layout
 
@@ -49,7 +51,7 @@ Install the local `pre-push` hook and run all three verification gates via `./sc
 Individual gate commands:
 
 1. **Gate 1 — Packaged-JAR E2E GameTest + Client Screen Lifecycle (`1.21.1` NeoForge)**:
-   - Stages the real built `kill_confirmed-neoforge-2.0.0+1.21.1.jar` into `run-gametest/mods/` and verifies real `ServerPlayer.die()` 3-line epitaph + `location` landmark, lava/fire `fire_resistant` ticks, anti-farm cooldown, Bundle interactions, `DogTagCaseMenu` `9×6` → `108`-slot scroll/auto-pickup/sort/`quickMoveStack` stress, plus headless `DogTagCaseScreen` & `KillConfirmedConfigScreen` init.
+   - Stages the real built `kill_confirmed-neoforge-2.0.2+1.21.1.jar` into `run-gametest/mods/` and verifies real `ServerPlayer.die()` 3-line epitaph + `location` landmark, lava/fire `fire_resistant` ticks, anti-farm cooldown, Bundle interactions, `DogTagCaseMenu` `9×6` → `108`-slot scroll/auto-pickup/sort/`quickMoveStack` stress, plus headless `DogTagCaseScreen` & `KillConfirmedConfigScreen` init.
    ```bash
    ./gradlew :neoforge:runGameTestServer -Pminecraft_version=1.21.1 -Ploader=neoforge --no-configuration-cache
    ./gradlew :neoforge:test --tests "dev.rinchan.killconfirmed.client.ScreenLifecycleTest" -Pminecraft_version=1.21.1 -Ploader=neoforge --no-configuration-cache

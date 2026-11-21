@@ -39,7 +39,7 @@ Standalone single JAR with zero external dependencies (no Fabric API required).
 
 ---
 
-## Supported Matrix (8 Targets)
+## Supported Matrix (10 Targets)
 
 | Minecraft | Loaders | Java |
 | --- | --- | --- |
@@ -47,6 +47,7 @@ Standalone single JAR with zero external dependencies (no Fabric API required).
 | `1.21.1` | Fabric, NeoForge | 21 |
 | `26.1.2` | Fabric, NeoForge | 25 |
 | `26.2` | Fabric, NeoForge | 25 |
+| `26.3` | Fabric, NeoForge | 25 |
 
 ---
 
@@ -75,14 +76,14 @@ Install the local `pre-push` verification hook once per clone:
 ./scripts/setup-hooks.sh
 ```
 
-Run the full 8-target matrix build and all three verification gates (Property bombardment, 8-JAR Architecture contract audit, headless Screen lifecycle, and Packaged-JAR `1.21.1` NeoForge E2E `GameTestServer`):
+Run the full 10-target matrix build and all three verification gates (Property bombardment, 10-JAR Architecture contract audit, headless Screen lifecycle, and Packaged-JAR `1.21.1` NeoForge E2E `GameTestServer`):
 
 ```bash
 ./scripts/verify.sh              # Native (auto-falls back to container if JDK 17/21/25 missing)
 ./scripts/verify.sh --container  # Run inside Ubuntu 24.04 + Temurin 17/21/25 + xvfb-run (Dockerfile.verify)
 ```
 
-All 8 verified JARs and `manifest.json` are written to `build/releases/`.
+All 10 verified JARs and `manifest.json` are written to `build/releases/`.
 
 ## License
 

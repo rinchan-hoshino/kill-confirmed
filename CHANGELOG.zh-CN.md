@@ -1,5 +1,10 @@
 # 更新日志
 
+## 2.0.2
+
+- **修复 `1.20.1` Forge `pack.mcmeta`**：仅在 `1.20.1` Forge JAR 中内置 `pack_format: 15` 的 `pack.mcmeta`，消除客户端启动 `ResourcePackInfo` 警告，并在 `scripts/build-matrix.py` 增加构建产物硬断言。
+- **新增 Minecraft `26.3` 支持**：新增 `26.3`（`Fabric` 与 `NeoForge`，Java 25）构建目标，扩展至 10 目标全量发布矩阵。
+
 ## 1.2.0
 
 - 配置合并为带注释的 `config/kill_confirmed.toml`，统一设置掉落方式、仅玩家击杀、可选函数和 lore。旧 JSON 启动警告一次并忽略，不自动迁移。

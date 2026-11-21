@@ -30,9 +30,9 @@ Kill Confirmed 会在玩家死亡时生成一枚狗牌，可用于记录或纪�
 
 ## 兼容性
 
-- Minecraft 1.21.1、26.1.2、26.2
-- Fabric 和 NeoForge
-- 已内嵌 RinLib，无需另外安装。
+- Minecraft 1.20.1、1.21.1、26.1.2、26.2、26.3
+- Fabric、Forge 和 NeoForge
+- 零外部依赖，单 JAR 独立运行。
 
 ## 下载
 

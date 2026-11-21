@@ -73,10 +73,10 @@ fi
 export JAVA_17_HOME JAVA_21_HOME JAVA_25_HOME
 cd "${ROOT}"
 
-echo "==> [1/3] Building all 8 matrix targets (build-matrix.py)..."
+echo "==> [1/3] Building all 10 matrix targets (build-matrix.py)..."
 python3 scripts/build-matrix.py
 
-echo "==> [2/3] Running Property, ScreenLifecycle & full 8-JAR ArchitectureContract gates..."
+echo "==> [2/3] Running Property, ScreenLifecycle & full 10-JAR ArchitectureContract gates..."
 JAVA_HOME="${JAVA_21_HOME}" ./gradlew :neoforge:test \
     -Pminecraft_version=1.21.1 \
     -Ploader=neoforge \

@@ -4,7 +4,6 @@ import dev.rinchan.killconfirmed.api.DogTagSnapshot;
 import dev.rinchan.killconfirmed.api.PlaceholderContext;
 import java.util.List;
 import net.minecraft.ChatFormatting;
-import net.minecraft.commands.CommandSource;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
@@ -13,7 +12,6 @@ import net.minecraft.network.chat.ComponentUtils;
 import net.minecraft.network.chat.ResolutionContext;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.permissions.LevelBasedPermissionSet;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
@@ -25,16 +23,7 @@ final class DogTagItemFactory {
     static ItemStack create(ServerPlayer player, DogTagSnapshot snapshot, DamageSource source) {
         var registries = player.registryAccess();
         ServerLevel serverLevel = player.level();
-        CommandSourceStack commandSource = new CommandSourceStack(
-                CommandSource.NULL,
-                player.position(),
-                player.getRotationVector(),
-                serverLevel,
-                LevelBasedPermissionSet.GAMEMASTER,
-                player.getScoreboardName(),
-                player.getDisplayName(),
-                serverLevel.getServer(),
-                player).withSuppressedOutput();
+        CommandSourceStack commandSource = VersionCommandSource.create(player, serverLevel);
 
         String function = KillConfirmed.config().function();
         if (!function.isEmpty()) {
